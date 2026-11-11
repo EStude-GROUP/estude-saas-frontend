@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Edit3, Link2, LoaderCircle, Plus, Search, Unlink, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -273,9 +275,8 @@ export function ParentStudentLinksPanel() {
     <div className="w-full">
       <section className="overflow-visible rounded-lg border border-slate-200 bg-white shadow-card">
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <DebouncedSearchInput
+          <ResponsiveFilterToolbar
+ search={<DebouncedSearchInput
             value={search}
             onValueChange={setSearch}
             onSearch={(value) => {
@@ -284,12 +285,14 @@ export function ParentStudentLinksPanel() {
             }}
             placeholder="Tìm phụ huynh hoặc học sinh"
             containerClassName="sm:max-w-80"
-              />
-              <CustomSelect className="w-full sm:w-52" value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />
-              <CustomSelect className="w-full sm:w-56" value={classFilter} onValueChange={(value) => { setClassFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả lớp học" }, ...classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))]} ariaLabel="Lọc theo lớp học" searchable />
-              <DateRangePicker {...linkedDateRange} onChange={(value) => { setLinkedDateRange(value); setPage(1); }} onClear={resetFilters} className="w-full sm:w-60" buttonClassName="!h-[42px] !rounded-lg !px-2.5 !ring-0" />
-            </div>
-            <Button
+              />}
+ filters={[
+ { id: "status", label: "Trạng thái", width: 208, active: Boolean(statusFilter), content: (<CustomSelect className="w-full sm:w-52" value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />) },
+ { id: "class", label: "Lớp học", width: 224, active: Boolean(classFilter), content: (<CustomSelect className="w-full sm:w-56" value={classFilter} onValueChange={(value) => { setClassFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả lớp học" }, ...classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))]} ariaLabel="Lọc theo lớp học" searchable />) },
+ { id: "dates", label: "Ngày liên kết", width: 240, active: Boolean(linkedDateRange.from || linkedDateRange.to), fullWidth: true, content: (<DateRangePicker {...linkedDateRange} onChange={(value) => { setLinkedDateRange(value); setPage(1); }} onClear={resetFilters} className="w-full sm:w-60" buttonClassName="!h-[42px] !rounded-lg !px-2.5 !ring-0" />) }
+ ]}
+ onReset={() => { resetFilters(); }}
+ actions={<Button
             permission="parent_links.assign"
             className="h-[42px] shrink-0 !rounded-lg"
             onClick={() => {
@@ -300,8 +303,8 @@ export function ParentStudentLinksPanel() {
             }}
           >
             <Plus className="size-4" /> Tạo mới
-            </Button>
-          </div>
+            </Button>}
+ />
         </div>
         {error && !linkModalOpen ? (
           <p className="mx-4 mt-4 flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700">

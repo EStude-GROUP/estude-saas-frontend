@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Edit3, LoaderCircle, Plus, Search, Settings2, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -101,14 +103,15 @@ export function ClassManagementPanel() {
 
   return <div className="w-full">
     <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_190px_200px]">
-          <Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo mã hoặc tên lớp" />
-          <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...yearOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setPage(1); }} />
-          <CustomSelect value={statusFilter} options={statusOptions} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
-        </div>
-        <div className="flex shrink-0 justify-end"><Button permission="classes.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Thêm lớp học</Button></div>
-      </div>
+      <ResponsiveFilterToolbar
+ search={<Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo mã hoặc tên lớp" />}
+ filters={[
+ { id: "year", label: "Năm học", width: 190, active: Boolean(yearFilter), content: (<CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...yearOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setPage(1); }} />) },
+ { id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), content: (<CustomSelect value={statusFilter} options={statusOptions} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />) }
+ ]}
+ onReset={() => { setYearFilter(""); setStatusFilter(""); setPage(1); }}
+ actions={<div className="flex shrink-0 justify-end"><Button permission="classes.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Thêm lớp học</Button></div>}
+ />
     </div>
     <section className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
       {error ? <p className="m-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700"><XCircle className="size-4" />{error}</p> : null}

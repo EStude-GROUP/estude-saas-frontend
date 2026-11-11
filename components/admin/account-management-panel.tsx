@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import {
   useCallback,
   useEffect,
@@ -522,9 +524,8 @@ export function AccountManagementPanel() {
       ) : null}
 
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_150px_180px_230px]">
-            <DebouncedSearchInput
+        <ResponsiveFilterToolbar
+ search={<DebouncedSearchInput
               className="!h-[42px] !rounded-lg focus:!ring-0"
               value={search}
               onValueChange={setSearch}
@@ -533,8 +534,9 @@ export function AccountManagementPanel() {
                 setSubmittedSearch(value);
               }}
               placeholder="Tìm theo họ tên hoặc tên tài khoản"
-            />
-            <CustomSelect
+            />}
+ filters={[
+ { id: "role", label: "Vai trò", width: 150, active: Boolean(roleFilter), content: (<CustomSelect
               value={roleFilter}
               options={roleFilterOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
@@ -543,8 +545,8 @@ export function AccountManagementPanel() {
                 setRoleFilter(value);
                 setPage(1);
               }}
-            />
-            <CustomSelect
+            />) },
+ { id: "status", label: "Trạng thái", width: 180, active: Boolean(statusFilter), content: (<CustomSelect
               value={statusFilter}
               options={statusFilterOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
@@ -553,8 +555,8 @@ export function AccountManagementPanel() {
                 setStatusFilter(value);
                 setPage(1);
               }}
-            />
-            <DateRangePicker
+            />) },
+ { id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, content: (<DateRangePicker
               from={createdFrom}
               to={createdTo}
               buttonClassName="!h-[42px] !rounded-lg"
@@ -563,9 +565,10 @@ export function AccountManagementPanel() {
                 setCreatedTo(value.to);
                 setPage(1);
               }}
-            />
-          </div>
-          <div className="flex shrink-0 flex-nowrap justify-end gap-2">
+            />) }
+ ]}
+ onReset={() => { setRoleFilter(""); setStatusFilter(""); setCreatedFrom(""); setCreatedTo(""); setPage(1); }}
+ actions={<div className="flex shrink-0 flex-nowrap justify-end gap-2">
             <Button permission="accounts.export"
               variant="outline"
               className="!h-[42px] !rounded-lg"
@@ -585,8 +588,8 @@ export function AccountManagementPanel() {
             >
               <Plus className="size-4" /> Tạo mới
             </Button>
-          </div>
-        </div>
+          </div>}
+ />
       </div>
 
       <section className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">

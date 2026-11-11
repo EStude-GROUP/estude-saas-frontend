@@ -1,4 +1,6 @@
 "use client";
+
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 import { answerReleaseLabel } from "@/lib/exam-answer-release";
 
@@ -331,9 +333,8 @@ export function TeacherExamsPage() {
       <PageHeading title="Bài kiểm tra" />
       <div className="flex max-h-[calc(100dvh-106px)] min-h-0 w-full flex-col overflow-hidden">
         <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_180px_220px]">
-              <DebouncedSearchInput
+          <ResponsiveFilterToolbar
+ search={<DebouncedSearchInput
                 className="!h-[42px] !rounded-lg focus:!ring-0"
                 value={query}
                 onValueChange={setQuery}
@@ -342,8 +343,9 @@ export function TeacherExamsPage() {
                   setSubmittedQuery(value);
                 }}
                 placeholder="Tìm theo tên bài, môn học hoặc lớp"
-              />
-              <CustomSelect
+              />}
+ filters={[
+ { id: "status", label: "Trạng thái", width: 180, active: statusFilter !== "ALL", content: (<CustomSelect
                 value={statusFilter}
                 options={[
                   { value: "ALL", label: "Tất cả trạng thái" },
@@ -358,8 +360,8 @@ export function TeacherExamsPage() {
                   setStatusFilter(value as "ALL" | Exam["status"]);
                   setPage(1);
                 }}
-              />
-              <CustomSelect
+              />) },
+ { id: "class", label: "Lớp học", width: 220, active: classFilter !== "ALL", content: (<CustomSelect
                 value={classFilter}
                 options={[
                   { value: "ALL", label: "Tất cả lớp" },
@@ -378,17 +380,18 @@ export function TeacherExamsPage() {
                   setClassFilter(value);
                   setPage(1);
                 }}
-              />
-            </div>
-            <div className="flex shrink-0 flex-nowrap justify-end gap-2">
+              />) }
+ ]}
+ onReset={() => { setStatusFilter("ALL"); setClassFilter("ALL"); setPage(1); }}
+ actions={<div className="flex shrink-0 flex-nowrap justify-end gap-2">
               <Button permission="exams.create"
                 className="!h-[42px] !rounded-lg"
                 onClick={() => router.push(courseWorkspaceHref("/teacher/exams/new"))}
               >
                 <Plus className="size-4" /> Tạo mới
               </Button>
-            </div>
-          </div>
+            </div>}
+ />
         </div>
 
         <section className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">

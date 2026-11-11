@@ -203,6 +203,9 @@ test("teacher class report separates students from attempts and supports reviewe
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === "@/components/ui/responsive-filter-toolbar") return {
+      ResponsiveFilterToolbar: require("./helpers/filter-toolbar.cjs").filterToolbar(),
+    };
     // Exercise this isolated screen with future module rollout enabled.
     if (id === '@/lib/features') return { FEATURES: { aiQuestions: true, classAnalysis: true, examAnalysis: true, studyCoach: true, learningSupport: true } };
     if (id === "./student-evidence-panel") return { StudentEvidencePanel: () => null };

@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { BookOpen, Check, ChevronsUpDown, Edit3, LoaderCircle, Plus, Search, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -374,15 +376,16 @@ export function SubjectTeacherAssignmentPanel() {
   return (
     <div className="w-full">
       <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_190px_190px_220px]">
-            <Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm giáo viên, môn học hoặc lớp" />
-            <CustomSelect searchable isSearching={isClassSearching} onSearchChange={(value) => void searchClassOptions(value)} searchPlaceholder="Tìm lớp học..." value={classFilter} options={[{ value: "", label: "Tất cả lớp học" }, ...classOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setClassFilter(value); setPage(1); }} ariaLabel="Lọc theo lớp học" />
-            <CustomSelect searchable isSearching={isSubjectSearching} onSearchChange={(value) => void searchSubjectOptions(value)} searchPlaceholder="Tìm môn học..." value={subjectFilter} options={[{ value: "", label: "Tất cả môn học" }, ...subjectOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setSubjectFilter(value); setPage(1); }} ariaLabel="Lọc theo môn học" />
-            <CustomSelect searchable isSearching={isTeacherSearching} onSearchChange={(value) => void searchTeacherOptions(value)} searchPlaceholder="Tìm giáo viên..." value={teacherFilter} options={[{ value: "", label: "Tất cả giáo viên" }, ...teacherOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setTeacherFilter(value); setPage(1); }} ariaLabel="Lọc theo giáo viên" />
-          </div>
-          <Button permission="assignments.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Tạo phân công</Button>
-        </div>
+        <ResponsiveFilterToolbar
+ search={<Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm giáo viên, môn học hoặc lớp" />}
+ filters={[
+ { id: "class", label: "Lớp học", width: 190, active: Boolean(classFilter), content: (<CustomSelect searchable isSearching={isClassSearching} onSearchChange={(value) => void searchClassOptions(value)} searchPlaceholder="Tìm lớp học..." value={classFilter} options={[{ value: "", label: "Tất cả lớp học" }, ...classOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setClassFilter(value); setPage(1); }} ariaLabel="Lọc theo lớp học" />) },
+ { id: "subject", label: "Môn học", width: 190, active: Boolean(subjectFilter), content: (<CustomSelect searchable isSearching={isSubjectSearching} onSearchChange={(value) => void searchSubjectOptions(value)} searchPlaceholder="Tìm môn học..." value={subjectFilter} options={[{ value: "", label: "Tất cả môn học" }, ...subjectOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setSubjectFilter(value); setPage(1); }} ariaLabel="Lọc theo môn học" />) },
+ { id: "teacher", label: "Giáo viên", width: 220, active: Boolean(teacherFilter), content: (<CustomSelect searchable isSearching={isTeacherSearching} onSearchChange={(value) => void searchTeacherOptions(value)} searchPlaceholder="Tìm giáo viên..." value={teacherFilter} options={[{ value: "", label: "Tất cả giáo viên" }, ...teacherOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setTeacherFilter(value); setPage(1); }} ariaLabel="Lọc theo giáo viên" />) }
+ ]}
+ onReset={() => { setClassFilter(""); setSubjectFilter(""); setTeacherFilter(""); setPage(1); }}
+ actions={<Button permission="assignments.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Tạo phân công</Button>}
+ />
       </div>
 
       <section className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">

@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { FEATURES } from "@/lib/features";
 
@@ -424,8 +425,7 @@ export function SubmissionsPage() {
 
       <ReportOverviewDashboard report={report} />
 
-      <div className="mb-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,var(--search-input-max-width))_repeat(4,minmax(150px,auto))]">
-        <label className="search-field flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-card">
+      <ResponsiveFilterToolbar className="mb-3" search={<label className="search-field flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-card">
           <Search className="size-4 shrink-0 text-slate-400" />
           <Input
             className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
@@ -433,8 +433,7 @@ export function SubmissionsPage() {
             onChange={(event) => setStudentSearch(event.target.value)}
             placeholder="Tìm theo tên hoặc mã học sinh"
           />
-        </label>
-        <Select
+        </label>} filters={[{id:"participation",label:"Trạng thái tham gia",width:190,active:participationFilter !== "ALL",content:(<Select
           aria-label="Lọc trạng thái tham gia"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={participationFilter}
@@ -448,8 +447,8 @@ export function SubmissionsPage() {
           <option value="NOT_STARTED">Chưa bắt đầu</option>
           <option value="IN_PROGRESS">Đang làm</option>
           <option value="SUBMITTED">Đã nộp</option>
-        </Select>
-        <Select
+        </Select>)},
+{id:"grading",label:"Trạng thái chấm",width:200,active:gradingFilter !== "ALL",content:(<Select
           aria-label="Lọc trạng thái chấm"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={gradingFilter}
@@ -461,8 +460,8 @@ export function SubmissionsPage() {
           <option value="COMPLETE">Đã đủ điểm</option>
           <option value="PARTIAL">Còn tự luận</option>
           <option value="PUBLISHED">Đã công bố điểm</option>
-        </Select>
-        <Select
+        </Select>)},
+{id:"topic",label:"Chủ đề",width:200,active:topicFilter !== "ALL",content:(<Select
           aria-label="Lọc chủ đề cần hỗ trợ"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
           value={topicFilter}
@@ -477,16 +476,15 @@ export function SubmissionsPage() {
               {topic.topicName}
             </option>
           ))}
-        </Select>
-        <Button
+        </Select>)},
+{id:"support",label:"Nhóm cần hỗ trợ",width:220,active:supportOnly,content:(<Button
           variant={supportOnly ? "secondary" : "outline"}
           aria-pressed={supportOnly}
           onClick={() => setSupportOnly((value) => !value)}
         >
           <UserRoundSearch className="size-4" />
           Chỉ nhóm cần hỗ trợ
-        </Button>
-      </div>
+        </Button>)}]} onReset={()=>{setParticipationFilter("ALL");setGradingFilter("ALL");setTopicFilter("ALL");setSupportOnly(false);}} />
 
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_auto]">
         <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-card">

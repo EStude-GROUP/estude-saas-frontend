@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { FEATURES } from "@/lib/features";
 
 import Link from "@/components/ui/portal-link";
@@ -393,10 +395,8 @@ export function QuestionBankPage() {
 
       <div className="flex max-h-[calc(100dvh-86px)] min-h-0 w-full flex-col overflow-hidden">
         <section className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-          <div className="flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-center">
-            <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,var(--search-input-max-width))_200px_200px]">
-              <div className="min-w-0 sm:col-span-2 xl:col-span-1">
-                <DebouncedSearchInput
+          <ResponsiveFilterToolbar
+ search={<DebouncedSearchInput
                   className="!h-[42px] !rounded-lg focus:!ring-0"
                   value={search}
                   onValueChange={setSearch}
@@ -405,10 +405,9 @@ export function QuestionBankPage() {
                     setSubmittedSearch(value);
                   }}
                   placeholder="Tìm theo nội dung câu hỏi..."
-                />
-              </div>
-              <div className="min-w-0">
-                <CustomSelect
+                />}
+ filters={[
+ { id: "difficulty", label: "Độ khó", width: 200, active: Boolean(difficulty), content: (<CustomSelect
                   value={difficulty}
                   options={[
                     { value: "", label: "Mọi độ khó" },
@@ -422,10 +421,8 @@ export function QuestionBankPage() {
                     setPage(1);
                     setDifficulty(value as Difficulty | "");
                   }}
-                />
-              </div>
-              <div className="min-w-0">
-                <CustomSelect
+                />) },
+ { id: "type", label: "Loại câu hỏi", width: 200, active: Boolean(type), content: (<CustomSelect
                   value={type}
                   options={[
                     { value: "", label: "Mọi loại câu hỏi" },
@@ -439,11 +436,10 @@ export function QuestionBankPage() {
                     setPage(1);
                     setType(value as QuestionType | "");
                   }}
-                />
-              </div>
-            </div>
-
-            <div className="flex min-w-0 flex-wrap justify-start gap-2 sm:justify-end 2xl:shrink-0">
+                />) }
+ ]}
+ onReset={() => { setDifficulty(""); setType(""); setPage(1); }}
+ actions={<div className="flex min-w-0 flex-wrap justify-start gap-2 sm:justify-end 2xl:shrink-0">
               {selectedIds.length ? (
                 <>
                   <Button permission="questions.update" variant="outline" className="!h-[42px] !rounded-lg whitespace-nowrap" onClick={() => { setFolderError(""); setTargetFolderId(selectedFolder === "all" || selectedFolder === "unfiled" ? "" : selectedFolder); setFolderMoveOpen(true); }}>
@@ -467,8 +463,8 @@ export function QuestionBankPage() {
                   Tạo câu hỏi
                 </Button>
               </Link>
-            </div>
-          </div>
+            </div>}
+ />
         </section>
 
         <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">

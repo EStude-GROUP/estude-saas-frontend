@@ -140,6 +140,9 @@ function loadTeacher(view, save, extraService = {}) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === "@/components/ui/responsive-filter-toolbar") return {
+      ResponsiveFilterToolbar: require("./helpers/filter-toolbar.cjs").filterToolbar(true),
+    };
     if (id === "@/components/ui/modal") return {
       Modal: ({ open, title, children, footer, onClose }) => open
         ? React.createElement("dialog", { "aria-label": title, onCancel: onClose }, children, footer)

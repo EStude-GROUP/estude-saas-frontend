@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "@/lib/portal-navigation";
 import { Eye, LoaderCircle, Pencil, XCircle } from "lucide-react";
@@ -270,8 +272,8 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
   return (
     <div className="flex max-h-[calc(100dvh-88px)] min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_190px_230px]">
-          <DebouncedSearchInput
+        <ResponsiveFilterToolbar
+ search={<DebouncedSearchInput
             className="!h-[42px] !rounded-lg focus:!ring-0"
             value={search}
             onValueChange={setSearch}
@@ -280,8 +282,9 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
               setSubmittedSearch(value);
             }}
             placeholder="Tìm theo họ tên hoặc mã người dùng"
-          />
-          <CustomSelect
+          />}
+ filters={[
+ { id: "status", label: "Trạng thái", width: 190, active: Boolean(statusFilter), content: (<CustomSelect
             value={statusFilter}
             options={statusFilterOptions}
             buttonClassName="!h-[42px] !rounded-lg !ring-0"
@@ -290,8 +293,8 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
               setStatusFilter(value);
               setPage(1);
             }}
-          />
-          <DateRangePicker
+          />) },
+ { id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, content: (<DateRangePicker
             from={createdFrom}
             to={createdTo}
             buttonClassName="!h-[42px] !rounded-lg"
@@ -300,8 +303,10 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
               setCreatedTo(value.to);
               setPage(1);
             }}
-          />
-        </div>
+          />) }
+ ]}
+ onReset={() => { setStatusFilter(""); setCreatedFrom(""); setCreatedTo(""); setPage(1); }}
+ />
       </div>
 
       <section className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">

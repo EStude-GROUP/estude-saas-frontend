@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Download, FileSpreadsheet, Filter, LoaderCircle, RefreshCw, Search, Upload } from "lucide-react";
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
+import { useEffect, useState } from "react";
+import { Download, FileSpreadsheet, LoaderCircle, RefreshCw, Search, Upload } from "lucide-react";
 import { Table, TableBody, TableCell, TableEmptyRow, TableHead, TableHeader } from "@/components/ui/data-table";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { CustomSelect, Input, Select, FileInput, Textarea } from "@/components/ui/form-control";
@@ -71,14 +73,9 @@ export function LegacyGradebookPanel({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [compactFilters, setCompactFilters] = useState(true);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [draftSubjectId, setDraftSubjectId] = useState(subjectId);
   const [draftTermId, setDraftTermId] = useState(termId);
   const [draftStatusFilter, setDraftStatusFilter] = useState("");
-  const filterBarRef = useRef<HTMLDivElement>(null);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-  const filterPopupRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [importOpen, setImportOpen] = useState(false);
@@ -99,48 +96,6 @@ export function LegacyGradebookPanel({
   const [comment, setComment] = useState("");
   const firstSubjectId = schoolClass.subjects[0]?.id ?? "";
   const defaultTermId = (terms.find((item) => item.status === "ACTIVE") ?? terms[0])?.id ?? "";
-  const hasActiveFilters = Boolean(statusFilter || subjectId !== firstSubjectId || (defaultTermId && termId !== defaultTermId));
-  useEffect(() => {
-    const bar = filterBarRef.current;
-    if (!bar) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const compact = entry.contentRect.width < 1050;
-      setCompactFilters(compact);
-      if (!compact) setFilterOpen(false);
-    });
-    observer.observe(bar);
-    return () => observer.disconnect();
-  }, []);
-  useEffect(() => {
-    if (!filterOpen) return;
-    function closeOnOutsideClick(event: MouseEvent) {
-      const target = event.target as Node;
-      if (!filterButtonRef.current?.contains(target) && !filterPopupRef.current?.contains(target)) setFilterOpen(false);
-    }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setFilterOpen(false);
-    }
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutsideClick);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [filterOpen]);
-  function openFilters() {
-    setDraftSubjectId(subjectId);
-    setDraftTermId(termId);
-    setDraftStatusFilter(statusFilter);
-    setFilterOpen(true);
-  }
-  function applyFilters() {
-    setSubjectId(draftSubjectId);
-    setTermId(draftTermId);
-    setStatusFilter(draftStatusFilter);
-    setPage(1);
-    setNotice("");
-    setFilterOpen(false);
-  }
   useEffect(() => {
     setSubjectId(firstSubjectId);
     setSearch("");
@@ -224,7 +179,6 @@ export function LegacyGradebookPanel({
   const currentPage = Math.min(page, totalPages);
   const pagedStudents = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   function openImport() {
-    setFilterOpen(false);
     setImportFile(null);
     setImportPreview(null);
     setImportError("");
@@ -360,45 +314,19 @@ export function LegacyGradebookPanel({
   return (
     <section className="space-y-4 py-1">
       <div className="relative rounded-xl border border-slate-200 bg-white shadow-card">
-        <div ref={filterBarRef} className="relative flex flex-wrap items-center gap-3 border-b border-slate-100 p-3">
-          <div className="search-field">
-            <Input containerClassName="search-field" icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />
-          </div>
-          {!compactFilters ? (
-            <div className="flex min-w-0 flex-[3] gap-3">
-              <CustomSelect className="min-w-0 flex-[2]" value={subjectId} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={(value) => { setSubjectId(value); setPage(1); setNotice(""); }} />
-              <CustomSelect className="min-w-0 flex-1" value={termId} options={terms.map((term) => ({ value: term.id, label: term.name }))} disabled={saving || Boolean(editing) || termsLoading || !terms.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" placeholder="Chưa có học kỳ" onValueChange={(value) => { setTermId(value); setPage(1); setNotice(""); }} />
-              <CustomSelect className="min-w-0 flex-1" value={statusFilter} options={statusOptions} disabled={Boolean(editing)} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái điểm" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />
-            </div>
-          ) : (
-            <Button variant="plain" ref={filterButtonRef} type="button" aria-expanded={filterOpen} aria-controls="gradebook-filter-popup" className="inline-flex h-[42px] shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50" onClick={() => filterOpen ? setFilterOpen(false) : openFilters()}>
-              Bộ lọc<span className="relative"><Filter className="size-4" />{hasActiveFilters ? <span className="absolute -right-1 -top-1 size-2 rounded-full bg-orange-500" /> : null}</span>
-            </Button>
-          )}
-          <Button variant="plain" type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
+        <ResponsiveFilterToolbar className="border-b border-slate-100 p-3" search={<Input containerClassName="search-field" icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />} filters={[{id:"subject",label:"Môn học",width:220,active:subjectId !== firstSubjectId,content:(inPopup)=>(<CustomSelect className="min-w-0 flex-[2]" value={inPopup ? draftSubjectId : subjectId} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={(value)=>{if(inPopup)setDraftSubjectId(value);else{setSubjectId(value);setPage(1);}}} />)},
+{id:"term",label:"Học kỳ",width:192,active:Boolean(defaultTermId && termId !== defaultTermId),content:(inPopup)=>(<CustomSelect className="min-w-0 flex-1" value={inPopup ? draftTermId : termId} options={terms.map((term) => ({ value: term.id, label: term.name }))} disabled={saving || Boolean(editing) || termsLoading || !terms.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" placeholder="Chưa có học kỳ" onValueChange={(value)=>{if(inPopup)setDraftTermId(value);else{setTermId(value);setPage(1);}}} />)},
+{id:"status",label:"Trạng thái",width:200,active:Boolean(statusFilter),content:(inPopup)=>(<CustomSelect className="min-w-0 flex-1" value={inPopup ? draftStatusFilter : statusFilter} options={statusOptions} disabled={Boolean(editing)} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái điểm" onValueChange={(value)=>{if(inPopup)setDraftStatusFilter(value);else{setStatusFilter(value);setPage(1);}}} />)}]}
+ onOpen={()=>{setDraftSubjectId(subjectId);setDraftTermId(termId);setDraftStatusFilter(statusFilter);}}
+ onReset={()=>{setDraftSubjectId(firstSubjectId);setDraftTermId(defaultTermId);setDraftStatusFilter("");}}
+ popupFooter={(close)=><><Button variant="outline" onClick={close}>Hủy</Button><Button disabled={saving || Boolean(editing) || termsLoading} onClick={()=>{setSubjectId(draftSubjectId);setTermId(draftTermId);setStatusFilter(draftStatusFilter);setPage(1);setNotice("");close();}}>Áp dụng</Button></>}
+ actions={<>{/* Existing grade actions */}<Button variant="plain" type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
             <RefreshCw className="size-4" />Tải lại
           </Button>
-          <Button variant="plain" type="button" aria-haspopup="dialog" aria-expanded={importOpen} className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 text-sm font-bold text-white disabled:opacity-50" disabled={!view?.book || locked || loading || Boolean(editing) || Boolean(importBusy)} onClick={openImport}>
+<Button variant="plain" type="button" aria-haspopup="dialog" aria-expanded={importOpen} className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 text-sm font-bold text-white disabled:opacity-50" disabled={!view?.book || locked || loading || Boolean(editing) || Boolean(importBusy)} onClick={openImport}>
             <FileSpreadsheet className="size-4" />Import Excel
-          </Button>
-          {compactFilters && filterOpen ? (
-            <div ref={filterPopupRef} id="gradebook-filter-popup" className="absolute right-3 top-full z-50 mt-1 w-[calc(100%_-_1.5rem)] max-w-[480px] rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15">
-              <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                <span className="text-sm font-bold text-amber-600">Bộ lọc</span>
-                <Button variant="plain" type="button" aria-label="Đặt lại bộ lọc" className="rounded-md p-1 text-amber-600 hover:bg-amber-50" onClick={() => { setDraftSubjectId(firstSubjectId); setDraftTermId(defaultTermId); setDraftStatusFilter(""); }}><RefreshCw className="size-4" /></Button>
-              </div>
-              <div className="grid gap-4 p-4 sm:grid-cols-2">
-                <CustomSelect label="Môn học" value={draftSubjectId} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={setDraftSubjectId} />
-                <CustomSelect label="Học kỳ" value={draftTermId} options={terms.map((term) => ({ value: term.id, label: term.name }))} disabled={saving || Boolean(editing) || termsLoading || !terms.length} ariaLabel="Lọc theo học kỳ" placeholder="Chưa có học kỳ" onValueChange={setDraftTermId} />
-                <CustomSelect label="Trạng thái" value={draftStatusFilter} options={statusOptions} disabled={Boolean(editing)} ariaLabel="Lọc theo trạng thái điểm" onValueChange={setDraftStatusFilter} />
-              </div>
-              <div className="flex justify-end gap-2 border-t border-slate-200 p-4">
-                <Button variant="plain" type="button" className="rounded-lg border border-amber-500 px-4 py-2 text-sm font-semibold text-amber-700" onClick={() => setFilterOpen(false)}>Hủy</Button>
-                <Button variant="plain" type="button" className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={saving || Boolean(editing) || termsLoading} onClick={applyFilters}>Áp dụng</Button>
-              </div>
-            </div>
-          ) : null}
-        </div>
+          </Button></>}
+ />
       {error ? (
         <p role="alert" className="m-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
           {error}

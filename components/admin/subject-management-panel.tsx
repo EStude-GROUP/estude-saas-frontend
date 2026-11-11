@@ -1,5 +1,7 @@
 "use client";
 
+import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   BookOpen,
@@ -216,9 +218,8 @@ export function SubjectManagementPanel() {
   return (
     <div className="flex max-h-[calc(100dvh-88px)] min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_200px]">
-            <Input containerClassName="search-field"
+        <ResponsiveFilterToolbar
+ search={<Input containerClassName="search-field"
               icon={Search}
                 value={search}
                 onChange={(event) => {
@@ -226,8 +227,9 @@ export function SubjectManagementPanel() {
                   setPage(1);
                 }}
                 placeholder="Tìm theo mã hoặc tên môn học"
-            />
-            <CustomSelect
+            />}
+ filters={[
+ { id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), content: (<CustomSelect
               value={statusFilter}
               options={statusOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
@@ -236,15 +238,16 @@ export function SubjectManagementPanel() {
                 setStatusFilter(value);
                 setPage(1);
               }}
-            />
-          </div>
-          <div className="flex shrink-0 justify-end gap-2">
+            />) }
+ ]}
+ onReset={() => { setStatusFilter(""); setPage(1); }}
+ actions={<div className="flex shrink-0 justify-end gap-2">
             <Button permission="subjects.create" className="!h-[42px] !rounded-lg" onClick={openCreate}>
               <Plus className="size-4" />
               Thêm môn học
             </Button>
-          </div>
-        </div>
+          </div>}
+ />
       </div>
       <section className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
         {error ? (

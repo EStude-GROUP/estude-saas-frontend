@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
   ChevronLeft,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { CustomSelect } from "./custom-select";
+import { FilterPopoverContext } from "./filter-popover-context";
 
 interface PickerControlProps {
   id?: string;
@@ -224,6 +225,7 @@ export function DateRangePicker({
   min,
   max,
 }: DateRangePickerProps) {
+  const embedded = useContext(FilterPopoverContext);
   const containerRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => normalizeDate(new Date()), []);
   const presets = useMemo(() => getPresets(today), [today]);
@@ -337,13 +339,13 @@ export function DateRangePicker({
           aria-label={singleDate ? "Chọn ngày" : "Chọn khoảng thời gian"}
           className={cn(
             "absolute right-0 top-full z-50 mt-2 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/15",
-            singleDate
+            embedded ? "!static !w-full !max-h-none" : singleDate
               ? "w-[min(360px,calc(100vw-2rem))]"
               : "grid w-[min(680px,calc(100vw-2rem))] md:grid-cols-[132px_minmax(0,1fr)]",
           )}
         >
           {!singleDate ? (
-            <div className="grid content-start grid-cols-2 gap-0.5 border-b border-slate-100 p-2 md:grid-cols-1 md:border-b-0 md:border-r">
+            <div className={cn("grid content-start grid-cols-2 gap-0.5 border-b border-slate-100 p-2", !embedded && "md:grid-cols-1 md:border-b-0 md:border-r")}>
               {presets.map((preset) => {
                 const selected = preset.value.from === from && preset.value.to === to;
                 return (
@@ -356,7 +358,7 @@ export function DateRangePicker({
                       selected
                         ? "bg-blue-50 font-bold text-brand-700"
                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
-                      preset.label === "Toàn bộ" && "col-span-2 md:col-span-1",
+                      preset.label === "Toàn bộ" && (embedded ? "col-span-2" : "col-span-2 md:col-span-1"),
                     )}
                   >
                     {preset.label}
@@ -366,7 +368,7 @@ export function DateRangePicker({
             </div>
           ) : null}
 
-          <div className={cn("grid min-w-0", !singleDate && "md:grid-cols-2")}>
+          <div className={cn("grid min-w-0", !singleDate && !embedded && "md:grid-cols-2")}>
             <CalendarMonth
               month={visibleMonth}
               today={today}
@@ -378,12 +380,12 @@ export function DateRangePicker({
               onPreviousMonth={() => setVisibleMonth((month) => addMonths(month, -1))}
               onPreviousYear={() => setVisibleMonth((month) => addMonths(month, -12))}
               onNextMonth={
-                singleDate
+                singleDate || embedded
                   ? () => setVisibleMonth((month) => addMonths(month, 1))
                   : undefined
               }
               onNextYear={
-                singleDate
+                singleDate || embedded
                   ? () => setVisibleMonth((month) => addMonths(month, 12))
                   : undefined
               }
@@ -391,7 +393,7 @@ export function DateRangePicker({
             <CalendarMonth
               className={cn(
                 "border-l border-slate-100",
-                singleDate ? "hidden" : "hidden md:block",
+                singleDate || embedded ? "hidden" : "hidden md:block",
               )}
               month={addMonths(visibleMonth, 1)}
               today={today}
