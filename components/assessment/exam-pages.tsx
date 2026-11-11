@@ -332,7 +332,7 @@ export function TeacherExamsPage() {
       <div className="flex max-h-[calc(100dvh-106px)] min-h-0 w-full flex-col overflow-hidden">
         <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(220px,420px)_180px_220px]">
+            <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_180px_220px]">
               <DebouncedSearchInput
                 className="!h-[42px] !rounded-lg focus:!ring-0"
                 value={query}
@@ -2069,12 +2069,11 @@ export function ExamWizardPage({
         }
       >
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <Input
+          <Input containerClassName="search-field"
             icon={Search}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm theo nội dung hoặc chủ đề..."
-            className="sm:w-[420px]"
             autoFocus
           />
           <div className="flex items-center justify-between gap-3 sm:justify-end">

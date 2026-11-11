@@ -283,7 +283,7 @@ export function ParentStudentLinksPanel() {
               setPage(1);
             }}
             placeholder="Tìm phụ huynh hoặc học sinh"
-            className="w-full sm:w-80"
+            containerClassName="sm:max-w-80"
               />
               <CustomSelect className="w-full sm:w-52" value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />
               <CustomSelect className="w-full sm:w-56" value={classFilter} onValueChange={(value) => { setClassFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả lớp học" }, ...classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))]} ariaLabel="Lọc theo lớp học" searchable />

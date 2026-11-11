@@ -99,7 +99,7 @@ export function ClassTopicLibraryPicker({
         <p className="text-sm leading-6 text-slate-600">
           Chọn tài liệu đã tải lên thư viện. Tài liệu sẽ được dùng lại trong chủ đề này, không tạo bản sao.
         </p>
-        <div className="relative">
+        <div className="search-field relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={search}

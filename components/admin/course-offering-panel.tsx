@@ -219,8 +219,8 @@ export function CourseOfferingPanel() {
   return <div className="w-full">
     <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(200px,360px)_190px_max-content]">
-          <div className="col-span-2 sm:col-span-1"><Input icon={Search} className="!h-[42px]" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" /></div>
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(0,var(--search-input-max-width))_190px_max-content]">
+          <div className="col-span-2 sm:col-span-1"><Input containerClassName="search-field" icon={Search} className="!h-[42px]" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" /></div>
           <CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setTermFilter(""); setPage(1); setFilterOpen(false); }} />
           <div className="relative">
             <Button ref={filterButtonRef} variant="outline" className="!h-[42px] gap-2" aria-haspopup="dialog" aria-expanded={filterOpen} aria-controls={filterOpen ? filterId : undefined} onClick={() => filterOpen ? closeFilters() : openFilters()}>

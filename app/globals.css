@@ -8,9 +8,16 @@
   --table-max-height: 720px;
   --table-row-height: 3rem;
   --table-header-height: 3rem;
+  --search-input-max-width: 360px;
 }
 
 @layer components {
+  .search-field {
+    width: 100%;
+    min-width: 0;
+    max-width: var(--search-input-max-width);
+  }
+
   .data-table-scroll {
     max-height: var(--table-max-height);
   }

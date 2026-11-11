@@ -280,7 +280,7 @@ export function StudentExamReviewPanel({
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-[300px_220px]">
-            <Input
+            <Input containerClassName="search-field"
               icon={Search}
               value={search}
               onChange={(event) => setSearch(event.target.value)}

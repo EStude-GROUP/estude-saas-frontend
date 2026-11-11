@@ -271,6 +271,7 @@ export function PermissionsPanel() {
         <div className="grid items-start gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
             <Input
+              containerClassName="search-field"
               aria-label="Tìm nhóm quyền"
               placeholder="Tìm nhóm quyền..."
               value={groupSearch}
@@ -416,6 +417,7 @@ export function PermissionsPanel() {
               ))}
             </div>
             <Input
+              containerClassName="search-field"
               aria-label="Tìm chức năng"
               placeholder="Tìm chức năng..."
               value={featureSearch}

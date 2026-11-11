@@ -523,7 +523,7 @@ export function AccountManagementPanel() {
 
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(220px,360px)_150px_180px_230px]">
+          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_150px_180px_230px]">
             <DebouncedSearchInput
               className="!h-[42px] !rounded-lg focus:!ring-0"
               value={search}

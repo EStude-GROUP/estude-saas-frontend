@@ -199,7 +199,7 @@ export function LearningSupportOverviewPage() {
 
             <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-card">
               <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
-                <label className="relative min-w-0 flex-1">
+                <label className="search-field relative">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     value={search}

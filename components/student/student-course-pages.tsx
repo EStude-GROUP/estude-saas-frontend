@@ -166,8 +166,8 @@ export function StudentCoursesPage() {
             </div>
           </div>
         </div>
-        <div className="grid gap-3 border-t border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-[520px_260px_220px]">
-          <Input icon={Search} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên môn, mã môn, lớp hoặc giáo viên..." aria-label="Tìm môn học" />
+        <div className="grid gap-3 border-t border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,var(--search-input-max-width))_260px_220px]">
+          <Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên môn, mã môn, lớp hoặc giáo viên..." aria-label="Tìm môn học" />
           <CustomSelect value={classFilter} options={classOptions} onValueChange={setClassFilter} ariaLabel="Lọc theo lớp học" />
           <CustomSelect value={sortBy} options={[{ value: "subject", label: "Sắp xếp: Tên môn" }, { value: "code", label: "Sắp xếp: Mã môn" }, { value: "class", label: "Sắp xếp: Mã lớp" }]} onValueChange={(value) => setSortBy(value as typeof sortBy)} ariaLabel="Sắp xếp môn học" />
         </div>

@@ -353,8 +353,8 @@ function SupportContent({
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5">
-            <div className="min-w-52 flex-1">
-              <Input
+            <div className="search-field">
+              <Input containerClassName="search-field"
                 icon={Search}
                 className="!text-[13px]"
                 aria-label="Tìm học sinh"

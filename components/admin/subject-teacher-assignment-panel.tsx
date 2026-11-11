@@ -121,7 +121,7 @@ function OptionPickerModal({
       onClose={onClose}
     >
       <div className="border-b border-slate-100 p-5">
-        <Input
+        <Input containerClassName="search-field"
           autoFocus
           icon={Search}
           type="search"
@@ -375,8 +375,8 @@ export function SubjectTeacherAssignmentPanel() {
     <div className="w-full">
       <div className="rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(220px,360px)_190px_190px_220px]">
-            <Input icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm giáo viên, môn học hoặc lớp" />
+          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_190px_190px_220px]">
+            <Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm giáo viên, môn học hoặc lớp" />
             <CustomSelect searchable isSearching={isClassSearching} onSearchChange={(value) => void searchClassOptions(value)} searchPlaceholder="Tìm lớp học..." value={classFilter} options={[{ value: "", label: "Tất cả lớp học" }, ...classOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setClassFilter(value); setPage(1); }} ariaLabel="Lọc theo lớp học" />
             <CustomSelect searchable isSearching={isSubjectSearching} onSearchChange={(value) => void searchSubjectOptions(value)} searchPlaceholder="Tìm môn học..." value={subjectFilter} options={[{ value: "", label: "Tất cả môn học" }, ...subjectOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setSubjectFilter(value); setPage(1); }} ariaLabel="Lọc theo môn học" />
             <CustomSelect searchable isSearching={isTeacherSearching} onSearchChange={(value) => void searchTeacherOptions(value)} searchPlaceholder="Tìm giáo viên..." value={teacherFilter} options={[{ value: "", label: "Tất cả giáo viên" }, ...teacherOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setTeacherFilter(value); setPage(1); }} ariaLabel="Lọc theo giáo viên" />

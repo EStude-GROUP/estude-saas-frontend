@@ -11,6 +11,7 @@ import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  containerClassName?: string;
   icon?: LucideIcon;
   label?: string;
   hint?: string;
@@ -21,6 +22,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   {
     className,
+    containerClassName,
     icon: Icon,
     label,
     hint,
@@ -51,8 +53,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         {...props}
       />
   );
-  const control = Icon || canTogglePassword ? (
-    <span className="relative block">
+  const control = Icon || canTogglePassword || containerClassName ? (
+    <span className={cn("relative block min-w-0", !label && !hint && !error && containerClassName)}>
       {Icon ? (
         <Icon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
       ) : null}
@@ -77,7 +79,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 
   if (!label && !hint && !error) return control;
   return (
-    <div className="block">
+    <div className={cn("block min-w-0", containerClassName)}>
       {label ? (
         <label
           htmlFor={inputId}

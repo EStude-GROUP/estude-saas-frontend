@@ -284,14 +284,13 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input
+                <Input containerClassName="search-field sm:max-w-64"
                   icon={Search}
                   type="search"
                   value={rosterSearch}
                   onChange={(event) => setRosterSearch(event.target.value)}
                   placeholder="Tìm theo tên hoặc tài khoản"
                   aria-label="Tìm học sinh trong lớp"
-                  className="sm:w-64"
                 />
                 <Button permission="classes.assign" size="sm" onClick={openStudentPicker} disabled={Boolean(saving)}><Plus className="size-4" />Thêm học sinh</Button>
               </div>
@@ -336,7 +335,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
       >
         <div className="border-b border-slate-100 p-4">
           <div className="max-w-sm">
-            <Input icon={Search} value={studentSearch} onChange={(event) => handleStudentSearchChange(event.target.value)} placeholder="Tìm theo tên hoặc tài khoản" />
+            <Input containerClassName="search-field" icon={Search} value={studentSearch} onChange={(event) => handleStudentSearchChange(event.target.value)} placeholder="Tìm theo tên hoặc tài khoản" />
           </div>
         </div>
         <TableScrollArea>

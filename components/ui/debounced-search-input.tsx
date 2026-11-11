@@ -19,6 +19,7 @@ export function DebouncedSearchInput({
   onSearch,
   debounceMs = 500,
   className,
+  containerClassName,
   ...props
 }: DebouncedSearchInputProps) {
   const onSearchRef = useRef(onSearch);
@@ -49,7 +50,7 @@ export function DebouncedSearchInput({
   }
 
   return (
-    <form className="relative" onSubmit={handleSubmit} role="search">
+    <form className={cn("search-field relative", containerClassName)} onSubmit={handleSubmit} role="search">
       <Input
         {...props}
         icon={Search}

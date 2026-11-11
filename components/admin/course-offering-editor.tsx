@@ -137,7 +137,7 @@ export function CourseOfferingEditor({ course, teachers, yearName, termName, sub
         <details className="rounded-xl border border-slate-200 p-3">
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">Giáo viên đồng giảng ({coTeacherIds.length})</summary>
           <div className="mt-3 space-y-2">
-            <Input icon={Search} aria-label="Tìm giáo viên đồng giảng" placeholder="Tìm giáo viên..." value={teacherSearch} onChange={(event) => setTeacherSearch(event.target.value)} />
+            <Input containerClassName="search-field" icon={Search} aria-label="Tìm giáo viên đồng giảng" placeholder="Tìm giáo viên..." value={teacherSearch} onChange={(event) => setTeacherSearch(event.target.value)} />
             <div className="max-h-44 space-y-2 overflow-y-auto">{teacherOptions.filter((teacher) => teacher.value !== primaryId && matchesSearchKeyword(normalizeSearchKeyword(teacher.label), teacherSearch)).map((teacher) => <label key={teacher.value} className="flex items-center gap-2 rounded-lg p-2 text-sm text-slate-700">
               <Checkbox checked={coTeacherIds.includes(teacher.value)} disabled={!editable || !can("course_offerings.assign")} onChange={(event) => setCoTeacherIds((ids) => event.target.checked ? [...ids, teacher.value] : ids.filter((id) => id !== teacher.value))} />{teacher.label}
             </label>)}</div>

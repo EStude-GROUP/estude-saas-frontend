@@ -270,7 +270,7 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
   return (
     <div className="flex max-h-[calc(100dvh-88px)] min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-        <div className="grid gap-3 xl:grid-cols-[minmax(220px,420px)_190px_230px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_190px_230px]">
           <DebouncedSearchInput
             className="!h-[42px] !rounded-lg focus:!ring-0"
             value={search}

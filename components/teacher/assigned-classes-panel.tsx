@@ -100,7 +100,7 @@ export function TeacherAssignedClassesPanel() {
           <header className="border-b border-slate-100 px-4 py-4">
             <h2 className="font-black text-slate-900">Lớp học được phân công</h2>
             <p className="mt-1 text-xs text-slate-500">{filteredClasses.length} lớp đang phụ trách</p>
-            <div className="relative mt-3">
+            <div className="search-field relative mt-3">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={search}
@@ -172,7 +172,7 @@ export function TeacherAssignedClassesPanel() {
           </header>
 
           <div className="shrink-0 border-b border-slate-100 p-2.5">
-            <div className="relative w-full max-w-[360px]">
+            <div className="search-field relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={studentSearch}

@@ -77,8 +77,8 @@ export function ExamSubmissionsPanel({ examId, totalPoints }: { examId: string; 
       ) : (
         <>
           <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
-            <div className="min-w-48 flex-1">
-              <Input className="!h-[42px] !rounded-lg !text-[13px] focus:!ring-0" icon={Search} aria-label="Tìm học sinh nộp bài" placeholder="Tìm theo tên hoặc mã học sinh" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
+            <div className="search-field">
+              <Input containerClassName="search-field" className="!h-[42px] !rounded-lg !text-[13px] focus:!ring-0" icon={Search} aria-label="Tìm học sinh nộp bài" placeholder="Tìm theo tên hoặc mã học sinh" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />
             </div>
             {canView && !busy ? <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[13px] font-bold text-emerald-700">{students.size} học sinh đã nộp</span> : null}
           </div>

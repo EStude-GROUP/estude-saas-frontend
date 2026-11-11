@@ -357,7 +357,7 @@ export function TeacherMaterialLibraryPanel() {
     <div className="flex max-h-[calc(100dvh-88px)] min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(220px,360px)]">
+          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))]">
             <DebouncedSearchInput
               className="!h-[42px] !rounded-lg focus:!ring-0"
               value={search}

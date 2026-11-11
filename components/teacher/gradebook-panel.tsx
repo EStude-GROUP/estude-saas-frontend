@@ -361,8 +361,8 @@ export function LegacyGradebookPanel({
     <section className="space-y-4 py-1">
       <div className="relative rounded-xl border border-slate-200 bg-white shadow-card">
         <div ref={filterBarRef} className="relative flex flex-wrap items-center gap-3 border-b border-slate-100 p-3">
-          <div className="min-w-52 flex-1">
-            <Input icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />
+          <div className="search-field">
+            <Input containerClassName="search-field" icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />
           </div>
           {!compactFilters ? (
             <div className="flex min-w-0 flex-[3] gap-3">

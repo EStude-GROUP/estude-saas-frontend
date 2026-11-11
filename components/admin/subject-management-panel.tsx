@@ -217,8 +217,8 @@ export function SubjectManagementPanel() {
     <div className="flex max-h-[calc(100dvh-88px)] min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(260px,420px)_200px]">
-            <Input
+          <div className="grid min-w-0 flex-1 gap-3 xl:grid-cols-[minmax(0,var(--search-input-max-width))_200px]">
+            <Input containerClassName="search-field"
               icon={Search}
                 value={search}
                 onChange={(event) => {

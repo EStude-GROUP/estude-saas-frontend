@@ -424,8 +424,8 @@ export function SubmissionsPage() {
 
       <ReportOverviewDashboard report={report} />
 
-      <div className="mb-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_repeat(4,minmax(150px,auto))]">
-        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-card">
+      <div className="mb-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,var(--search-input-max-width))_repeat(4,minmax(150px,auto))]">
+        <label className="search-field flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-card">
           <Search className="size-4 shrink-0 text-slate-400" />
           <Input
             className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"

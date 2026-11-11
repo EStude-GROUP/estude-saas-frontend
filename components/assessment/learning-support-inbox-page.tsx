@@ -233,8 +233,9 @@ export function LearningSupportInboxPage() {
         <div className="grid min-h-[36rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card lg:grid-cols-[minmax(20rem,0.9fr)_minmax(0,1.6fr)]">
           <section className="border-b border-slate-200 lg:border-b-0 lg:border-r">
             <label className="relative block border-b border-slate-100 p-3">
-              <Search className="pointer-events-none absolute left-6 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
+                containerClassName="search-field"
+                icon={Search}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm học sinh hoặc nội dung"
