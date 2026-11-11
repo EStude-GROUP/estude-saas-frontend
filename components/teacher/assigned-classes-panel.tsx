@@ -18,6 +18,7 @@ import {
   TableLoadingBarRow,
 } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/form-control";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 function errorMessage(cause: unknown, fallback: string) {
@@ -183,7 +184,7 @@ export function TeacherAssignedClassesPanel() {
             </div>
           </div>
 
-          <div className="min-h-0 overflow-auto">
+          <TableScrollArea className="min-h-0">
             <Table className="min-w-[720px]">
               <TableHeader className="!bg-brand-600 !text-white">
                 <tr>
@@ -232,7 +233,7 @@ export function TeacherAssignedClassesPanel() {
                 )) : null}
               </TableBody>
             </Table>
-          </div>
+          </TableScrollArea>
         </section>
       </div>
     </div>

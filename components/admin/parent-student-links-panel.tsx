@@ -16,6 +16,7 @@ import { academicDataService } from "@/lib/assessment-api";
 import type { User } from "@/types/auth";
 import type { ParentStudentLink, ParentStudentLinksPage, UsersPage } from "@/types/users";
 import type { SchoolClass } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 function errorMessage(error: unknown, fallback: string) {
   if (!(error instanceof ApiError)) return fallback;
@@ -307,7 +308,7 @@ export function ParentStudentLinksPanel() {
             {error}
           </p>
         ) : null}
-        <div className="overflow-x-auto">
+        <TableScrollArea>
           <Table className="min-w-[880px]">
             <TableHeader className="!bg-brand-600 !text-white">
               <tr>
@@ -368,7 +369,7 @@ export function ParentStudentLinksPanel() {
                 : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         <DataTableFooter
           rowCount={links.length}
           totalItems={total}

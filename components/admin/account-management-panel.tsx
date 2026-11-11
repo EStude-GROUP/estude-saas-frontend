@@ -48,6 +48,7 @@ import {
 } from "@/lib/auth-api";
 import type { User, UserRole, UserStatus } from "@/types/auth";
 import type { ImportUsersResult, UsersPage } from "@/types/users";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 type ImportRole = Extract<UserRole, "TEACHER" | "STUDENT" | "PARENT">;
 type CreateRole = Extract<UserRole, "TEACHER" | "STUDENT" | "PARENT">;
@@ -595,7 +596,7 @@ export function AccountManagementPanel() {
           </p>
         ) : null}
 
-        <div className="min-h-0 shrink overflow-auto">
+        <TableScrollArea className="min-h-0 shrink">
           <Table className="min-w-[1250px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -687,7 +688,7 @@ export function AccountManagementPanel() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
 
         <DataTableFooter
           className="shrink-0 bg-white"

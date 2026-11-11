@@ -14,6 +14,7 @@ import { ApiError, authenticatedRequest } from "@/lib/auth-api";
 import { getSubjectApiSearchQueries, getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { SubjectTeacherAssignment } from "@/types/assessment";
 import type { UsersPage } from "@/types/users";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 
@@ -386,7 +387,7 @@ export function SubjectTeacherAssignmentPanel() {
 
       <section className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
         {error ? <p className="m-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700"><XCircle className="size-4" />{error}</p> : null}
-        <div className="overflow-x-auto">
+        <TableScrollArea>
           <Table className="min-w-[900px]">
             <TableHeader className="!bg-brand-600 !text-white"><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Giáo viên</TableHead><TableHead>Môn học</TableHead><TableHead>Lớp học</TableHead><TableHead>Trạng thái</TableHead><TableHead className="w-32 text-right">Thao tác</TableHead></tr></TableHeader>
             <TableBody>
@@ -404,7 +405,7 @@ export function SubjectTeacherAssignmentPanel() {
               )) : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         <DataTableFooter rowCount={pagedAssignments.length} totalItems={assignments.length} itemLabel="phân công" page={page} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
       </section>
 

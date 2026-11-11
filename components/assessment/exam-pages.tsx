@@ -87,6 +87,7 @@ import {
   type TeacherExamDefaults,
   type Topic,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const wizardSteps = [
   { label: "Thông tin", description: "Môn học và lớp", icon: BookOpen },
@@ -396,7 +397,7 @@ export function TeacherExamsPage() {
               <ErrorPanel message={error} />
             </div>
           ) : null}
-          <div className="min-h-0 shrink overflow-auto">
+          <TableScrollArea className="min-h-0 shrink">
           <Table className="min-w-[1280px] [&_button]:!text-[13px] [&_p]:!text-[13px] [&_span]:!text-[13px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -560,7 +561,7 @@ export function TeacherExamsPage() {
                 : null}
             </TableBody>
           </Table>
-          </div>
+          </TableScrollArea>
           <DataTableFooter
             className="shrink-0 bg-white text-[13px] [&_*]:!text-[13px]"
             rowCount={pagedExams.length}

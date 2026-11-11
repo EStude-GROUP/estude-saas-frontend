@@ -11,6 +11,7 @@ import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { examService } from "@/lib/assessment-api";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import type { ExamAttempt } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const numberFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
 const dateFormat = new Intl.DateTimeFormat("vi-VN", {
@@ -82,7 +83,7 @@ export function ExamSubmissionsPanel({ examId, totalPoints }: { examId: string; 
             {canView && !busy ? <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[13px] font-bold text-emerald-700">{students.size} học sinh đã nộp</span> : null}
           </div>
           <div className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
-          <div className="min-h-0 shrink overflow-auto">
+          <TableScrollArea className="min-h-0 shrink">
             <Table className="min-w-[620px] [&_button]:!text-[13px] [&_p]:!text-[13px] [&_span]:!text-[13px]">
               <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white"><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Học sinh</TableHead><TableHead>Thời gian nộp</TableHead><TableHead className="text-center">Điểm</TableHead><TableHead className="w-24 text-right">Thao tác</TableHead></tr></TableHeader>
               <TableBody>
@@ -99,7 +100,7 @@ export function ExamSubmissionsPanel({ examId, totalPoints }: { examId: string; 
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </TableScrollArea>
           {!busy ? <DataTableFooter className="shrink-0 bg-white text-[13px] [&_*]:!text-[13px]" rowCount={rows.length} totalItems={filtered.length} itemLabel="học sinh" page={currentPage} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(1); }} /> : null}
           </div>
           <p className="mt-2 shrink-0 px-1 text-[13px] leading-5 text-slate-500">Mỗi học sinh hiển thị lượt có điểm cao nhất đã chấm xong; nếu chưa có, hiển thị bài nộp để theo dõi.</p>

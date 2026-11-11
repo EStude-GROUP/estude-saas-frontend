@@ -41,6 +41,7 @@ import type {
   SubjectSupportReport,
   SubjectSupportStudent,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const levels = {
   HIGH: { label: "Cần ưu tiên", tone: "bg-rose-50 text-rose-700" },
@@ -372,7 +373,7 @@ function SupportContent({
             </label>
           </div>
           <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
-            <div className="overflow-x-auto">
+            <TableScrollArea>
               <Table className="min-w-[900px]">
                 <TableHeader className="!bg-brand-600 !text-white">
                   <tr>
@@ -449,7 +450,7 @@ function SupportContent({
                   )}
                 </TableBody>
               </Table>
-            </div>
+            </TableScrollArea>
           </section>
         </div>
       ) : null}
@@ -520,7 +521,7 @@ function SupportContent({
             <p className="rounded-lg bg-slate-50 p-3 leading-6">
               {selected.reasons.join(" ")}
             </p>
-            <div className="overflow-x-auto">
+            <TableScrollArea>
               <Table>
                 <TableHeader>
                   <tr>
@@ -560,7 +561,7 @@ function SupportContent({
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </TableScrollArea>
             <section>
               <h3 className="mb-2 font-bold text-slate-900">
                 Kiến thức cần kiểm tra lại — bằng chứng từ bài làm

@@ -55,6 +55,7 @@ import type {
   StudentCourseDetail,
   StudentCourseMaterial,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 
@@ -473,7 +474,7 @@ function CourseMaterials({ items, error, onPreview, onDownload }: { items: Array
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
       <header className="border-b border-slate-100 px-5 py-4"><h2 className="text-base font-black text-slate-950">Tài liệu môn học</h2><p className="mt-0.5 text-xs text-slate-500">{items.length} tài liệu đã được chia sẻ</p></header>
       {error ? <div className="p-4"><ErrorPanel message={error} /></div> : null}
-      <div className="overflow-x-auto"><Table>
+      <TableScrollArea><Table>
         <TableHeader><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Tài liệu</TableHead><TableHead>Chủ đề</TableHead><TableHead>Dung lượng</TableHead><TableHead>Ngày đăng</TableHead><TableHead className="w-32 text-right">Thao tác</TableHead></tr></TableHeader>
         <TableBody>
           {items.length === 0 ? <TableEmptyRow colSpan={6} message="Chưa có tài liệu cho môn học này" icon={<FileText className="size-5 text-slate-400" />} /> : null}
@@ -488,7 +489,7 @@ function CourseMaterials({ items, error, onPreview, onDownload }: { items: Array
             </tr>
           ))}
         </TableBody>
-      </Table></div>
+      </Table></TableScrollArea>
     </section>
   );
 }

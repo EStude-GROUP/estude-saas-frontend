@@ -21,6 +21,7 @@ import { ApiError, authenticatedRequest } from "@/lib/auth-api";
 import { normalizeSearchKeyword } from "@/lib/search-keyword";
 import type { ClassRoster } from "@/types/assessment";
 import type { UsersPage } from "@/types/users";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const AVAILABLE_STUDENT_LIMIT = 20;
 
@@ -295,7 +296,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
                 <Button permission="classes.assign" size="sm" onClick={openStudentPicker} disabled={Boolean(saving)}><Plus className="size-4" />Thêm học sinh</Button>
               </div>
             </div>
-            <div className="max-h-72 overflow-auto">
+            <TableScrollArea>
               <Table className="min-w-[620px]">
                 <TableHeader className="sticky top-0 !bg-brand-600 !text-white"><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Họ và tên</TableHead><TableHead>Tài khoản</TableHead><TableHead>Trạng thái</TableHead><TableHead className="w-20 text-right">Thao tác</TableHead></tr></TableHeader>
                 <TableBody>
@@ -310,7 +311,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
                   )) : <TableEmptyRow colSpan={5} message={normalizedRosterSearch ? "Không tìm thấy học sinh phù hợp" : "Lớp chưa có học sinh"} />}
                 </TableBody>
               </Table>
-            </div>
+            </TableScrollArea>
           </section>
       )}
 
@@ -338,7 +339,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
             <Input icon={Search} value={studentSearch} onChange={(event) => handleStudentSearchChange(event.target.value)} placeholder="Tìm theo tên hoặc tài khoản" />
           </div>
         </div>
-        <div className="max-h-[420px] overflow-auto">
+        <TableScrollArea>
           <Table className="min-w-[640px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -361,7 +362,7 @@ export function ClassStudentAssignmentContent({ classId }: { classId: string }) 
               )) : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         {!isAvailableLoading && availableStudentTotal > 0 ? (
           <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm text-slate-500">

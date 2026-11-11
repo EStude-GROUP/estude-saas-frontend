@@ -23,6 +23,7 @@ import { ApiError, authenticatedRequest } from "@/lib/auth-api";
 import { useActionNotification } from "@/components/ui/action-notification";
 import type { User, UserRole, UserStatus } from "@/types/auth";
 import type { UsersPage } from "@/types/users";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 type ManagedRole = Extract<UserRole, "TEACHER" | "STUDENT" | "PARENT">;
 
@@ -310,7 +311,7 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
           </p>
         ) : null}
 
-        <div className="min-h-0 shrink overflow-auto">
+        <TableScrollArea className="min-h-0 shrink">
           <Table
             className={`${
               role === "STUDENT"
@@ -480,7 +481,7 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
               )}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
 
         <DataTableFooter
           className="shrink-0 bg-white"

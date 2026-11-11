@@ -23,6 +23,7 @@ import type { AttendanceRoster, AttendanceStatus } from "@/types/engagement";
 import { DateInput } from "@/components/ui/date-range-picker";
 import { CourseWorkspacePicker } from "./course-workspace-picker";
 import { currentCourseId } from "@/lib/course-workspace";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "message" }) {
@@ -188,7 +189,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
 
               {!loading ? (
                 <>
-                  <div className="hidden overflow-auto md:block">
+                  <TableScrollArea className="hidden md:block">
                     <Table className="min-w-[720px]">
                       <TableHeader className="!bg-brand-600 !text-white">
                         <tr>
@@ -217,7 +218,7 @@ export function TeacherEngagementCenter({ mode }: { mode: "attendance" | "messag
                         )) : null}
                       </TableBody>
                     </Table>
-                  </div>
+                  </TableScrollArea>
 
                   {!error && roster?.students.length ? <div className="grid gap-2 p-2.5 md:hidden">{roster.students.map((student) => <article key={student.id} className={`flex items-center gap-3 rounded-lg border p-3 ${statuses[student.id] === "PRESENT" ? "border-emerald-200 bg-emerald-50/50" : "border-rose-200 bg-rose-50/50"}`}><span className="relative grid size-10 shrink-0 overflow-hidden place-items-center rounded-full bg-white font-bold text-brand-700">{student.avatarUrl ? <span className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${student.avatarUrl})` }} /> : student.fullName.trim().charAt(0).toUpperCase()}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-900">{student.fullName}</p><p className="mt-0.5 text-xs text-slate-500">{student.accountName} · {statuses[student.id] === "PRESENT" ? "Có mặt" : "Vắng"}</p></div><AttendanceToggle value={statuses[student.id]} onClick={() => toggleStudent(student.id)} compact /></article>)}</div> : null}
                   {!error && !roster?.students.length ? <div className="p-2.5 md:hidden"><div className="rounded-lg border border-dashed border-slate-300 px-5 py-10 text-center"><UsersRound className="mx-auto size-8 text-slate-300" /><h2 className="mt-3 font-extrabold text-slate-900">Lớp chưa có học sinh</h2><p className="mt-1 text-sm text-slate-500">Hãy thêm học sinh vào lớp trước khi điểm danh.</p></div></div> : null}

@@ -25,6 +25,7 @@ import type {
   TeacherAssignedClass,
   TeacherManagedStudent,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const statusLabels: Record<TeacherManagedStudent["status"], string> = {
   PENDING: "Chờ đăng nhập",
@@ -145,7 +146,7 @@ export function TeacherStudentsPanel() {
             <XCircle className="size-4" /> {error}
           </p>
         ) : null}
-        <div className="min-h-0 shrink overflow-auto">
+        <TableScrollArea className="min-h-0 shrink">
           <Table className="min-w-[920px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -248,7 +249,7 @@ export function TeacherStudentsPanel() {
                 : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         <DataTableFooter
           className="shrink-0 bg-white"
           rowCount={pagedStudents.length}

@@ -33,6 +33,7 @@ import { matchesSearchKeyword } from "@/lib/search-keyword";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type { ClassRoster, Exam, ExamListAiAnalysis, TeacherAssignedClass } from "@/types/assessment";
 import { Input } from "@/components/ui/form-control";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 type ClassTab = "online" | "topics" | "students" | "exams" | "grades" | "chat";
@@ -259,7 +260,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
                 </div>
               </header>
               {rosterError ? <p className="m-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{rosterError}</p> : null}
-              <div className="overflow-x-auto">
+              <TableScrollArea>
                 <Table className="min-w-[650px]">
                   <TableHeader className="!bg-brand-600 !text-white"><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Học sinh</TableHead><TableHead>Tài khoản</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Hồ sơ</TableHead></tr></TableHeader>
                   <TableBody>
@@ -278,7 +279,7 @@ export function TeacherClassLearningSpace({ classId, onClassNameChange }: { clas
                     }) : null}
                   </TableBody>
                 </Table>
-              </div>
+              </TableScrollArea>
             </section>
           ) : null}
 

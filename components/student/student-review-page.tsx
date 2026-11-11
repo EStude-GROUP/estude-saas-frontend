@@ -26,6 +26,7 @@ import { studentOverviewService } from "@/lib/assessment-api";
 import { normalizeSearchKeyword } from "@/lib/search-keyword";
 import { toVietnameseSubjectName } from "@/lib/subject-localization";
 import type { StudentExamScore, StudentOverview } from "@/types/student-overview";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const REVIEW_THRESHOLD = 50;
 
@@ -301,7 +302,7 @@ export function StudentExamReviewPanel({
           </div>
         </header>
 
-        <div className="overflow-x-auto">
+        <TableScrollArea>
           <Table className="min-w-[940px]">
             <TableHeader className="!bg-brand-600 !text-white">
               <tr>
@@ -407,7 +408,7 @@ export function StudentExamReviewPanel({
               })}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
       </section>
 
     </>

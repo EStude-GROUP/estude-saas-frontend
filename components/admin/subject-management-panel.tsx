@@ -33,6 +33,7 @@ import { matchesSearchKeyword } from "@/lib/search-keyword";
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import { ApiError } from "@/lib/auth-api";
 import type { Subject, SubjectImportResult } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const statusOptions = [
   { value: "", label: "Tất cả trạng thái" },
@@ -252,7 +253,7 @@ export function SubjectManagementPanel() {
             {error}
           </p>
         ) : null}
-        <div className="min-h-0 shrink overflow-auto">
+        <TableScrollArea className="min-h-0 shrink">
           <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -331,7 +332,7 @@ export function SubjectManagementPanel() {
                 : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         <DataTableFooter
           className="shrink-0 bg-white"
           rowCount={pagedSubjects.length}

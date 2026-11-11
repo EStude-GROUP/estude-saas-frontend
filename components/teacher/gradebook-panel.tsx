@@ -23,6 +23,7 @@ import { AcademicGradeActions } from "./academic-grade-actions";
 
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 const field =
@@ -445,7 +446,7 @@ export function LegacyGradebookPanel({
             </div> : null}
           </Modal>
           <div>
-            <div className="overflow-x-auto">
+            <TableScrollArea>
               <Table className="min-w-[1100px]">
                 <TableHeader className="!bg-brand-600 !text-white"><tr>
                   <TableHead className="w-14 text-center">#</TableHead>
@@ -475,7 +476,7 @@ export function LegacyGradebookPanel({
                   })}
                 </TableBody>
               </Table>
-            </div>
+            </TableScrollArea>
             {editing ? <div className="flex flex-wrap items-end gap-3 border-t border-blue-100 bg-blue-50/40 p-3"><label className="grid min-w-64 flex-1 gap-1 text-xs font-bold text-slate-600">Nhận xét cho {view.students.find((student) => student.id === editing)?.fullName}<Textarea className="min-h-16 rounded-lg border border-slate-200 bg-white p-2 text-sm outline-none focus:border-brand-400" maxLength={2000} disabled={saving} value={comment} onChange={(event) => setComment(event.target.value)} /></label><p className="max-w-xs text-xs text-slate-500">Để trống cột chưa đánh giá. Cột trống không được tính là điểm 0.</p></div> : null}
             {editing ? <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">Lưu hoặc hủy điểm đang nhập để chuyển trang.</p> : <DataTableFooter rowCount={pagedStudents.length} totalItems={filteredStudents.length} itemLabel="học sinh" page={currentPage} totalPages={totalPages} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />}
           </div>

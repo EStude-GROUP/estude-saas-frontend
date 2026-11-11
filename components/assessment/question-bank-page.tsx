@@ -51,6 +51,7 @@ import {
   type Subject,
   type Topic,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const difficultyTone: Record<Difficulty, string> = {
   EASY: "bg-emerald-50 text-emerald-700",
@@ -500,7 +501,7 @@ export function QuestionBankPage() {
               <ErrorPanel message={error} />
             </div>
           ) : null}
-          <div className="min-h-0 flex-1 overflow-auto">
+          <TableScrollArea className="min-h-0">
             <Table className="min-w-[1360px]">
               <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
                 <tr>
@@ -638,7 +639,7 @@ export function QuestionBankPage() {
                   : null}
               </TableBody>
             </Table>
-          </div>
+          </TableScrollArea>
           <DataTableFooter
             className="shrink-0 bg-white"
             rowCount={pagedQuestions.length}

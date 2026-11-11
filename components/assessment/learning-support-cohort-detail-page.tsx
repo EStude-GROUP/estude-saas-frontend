@@ -32,6 +32,7 @@ import type {
   LearningCohortProgress,
   LearningPlan,
 } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 const statusView = {
   DRAFT: { label: "Bản nháp", className: "bg-slate-100 text-slate-600" },
@@ -254,7 +255,7 @@ export function LearningSupportCohortDetailPage() {
                   {progress.rows.length} lộ trình
                 </span>
               </div>
-              <div className="overflow-x-auto">
+              <TableScrollArea>
                 <Table className="min-w-[1080px]">
                   <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
                     <tr>
@@ -338,7 +339,7 @@ export function LearningSupportCohortDetailPage() {
                     })}
                   </TableBody>
                 </Table>
-              </div>
+              </TableScrollArea>
             </section>
           </div>
         ) : null}

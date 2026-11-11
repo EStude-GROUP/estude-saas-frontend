@@ -42,6 +42,7 @@ import { examAttemptService, examService } from "@/lib/assessment-api";
 import { StudentInterventionPanel } from "@/components/assessment/student-intervention-panel";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import type { Exam, ExamAttempt, ExamClassAiAnalysis, ExamClassReport, ExamClassReportStudent, TeacherReviewStatus } from "@/types/assessment";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 export function SubmissionsPage() {
   const params = useParams<{ id: string }>();
@@ -1358,8 +1359,8 @@ function StudentReportTable({
       data-testid="class-report-students"
       className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card"
     >
-      <div
-        className="max-h-[65dvh] overflow-auto overscroll-contain focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-200"
+      <TableScrollArea
+        className="overscroll-contain focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-200"
         role="region"
         aria-label="Danh sách kết quả học sinh"
         tabIndex={0}
@@ -1523,7 +1524,7 @@ function StudentReportTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableScrollArea>
       <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">Điểm và thời gian lấy từ lượt có điểm cao nhất đã chấm xong. Bài chưa chấm xong và lượt đang làm không tham gia thống kê điểm.</p>
     </section>
   );
@@ -1544,7 +1545,7 @@ function TopicReportTable({
       data-testid="class-report-topics"
       className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card"
     >
-      <div className="overflow-x-auto">
+      <TableScrollArea>
         <Table className="min-w-[900px]">
           <TableHeader className="!bg-brand-600 !text-white">
             <tr>
@@ -1615,7 +1616,7 @@ function TopicReportTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableScrollArea>
     </section>
   );
 }
@@ -1661,7 +1662,7 @@ function QuestionReportTable({
       data-testid="class-report-questions"
       className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card"
     >
-      <div className="overflow-x-auto">
+      <TableScrollArea>
         <Table className="min-w-[1320px]">
           <TableHeader className="!bg-brand-600 !text-white">
             <tr>
@@ -1795,7 +1796,7 @@ function QuestionReportTable({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </TableScrollArea>
       <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
         Cỡ mẫu là số bài có câu hỏi này. Độ phân hóa dùng tương quan câu–tổng đã
         hiệu chỉnh: tổng điểm dùng để đối chiếu đã loại chính câu đang xét; cần

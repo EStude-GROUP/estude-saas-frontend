@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { CustomSelect } from "@/components/ui/form-control";
 import { Pagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/cn";
@@ -31,6 +32,11 @@ export function DataTableFooter({
   onPageSizeChange,
   className,
 }: DataTableFooterProps) {
+  const footerRef = useRef<HTMLElement>(null);
+  function resetTableScroll() {
+    const viewport = footerRef.current?.parentElement?.querySelector<HTMLElement>("[data-table-scroll]");
+    if (viewport) viewport.scrollTop = 0;
+  }
   if (rowCount === 0) return null;
 
   const options = pageSizeOptions.map((size) => ({
@@ -40,8 +46,9 @@ export function DataTableFooter({
 
   return (
     <footer
+      ref={footerRef}
       className={cn(
-        "flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between",
+        "flex shrink-0 flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
@@ -53,14 +60,14 @@ export function DataTableFooter({
           value={String(pageSize)}
           options={options}
           ariaLabel="Số dòng mỗi trang"
-          onValueChange={(value) => onPageSizeChange(Number(value))}
+          onValueChange={(value) => { resetTableScroll(); onPageSizeChange(Number(value)); }}
         />
         <span>
           Tổng cộng <strong className="text-slate-800">{totalItems}</strong>{" "}
           {itemLabel}
         </span>
       </div>
-      <Pagination page={page} totalPages={totalPages} onChange={onPageChange} />
+      <Pagination page={page} totalPages={totalPages} onChange={(value) => { resetTableScroll(); onPageChange(value); }} />
     </footer>
   );
 }

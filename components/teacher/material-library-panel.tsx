@@ -39,6 +39,7 @@ import type {
   TeacherAssignedClass,
 } from "@/types/assessment";
 import { FileInput, Checkbox, Select, Input } from "@/components/ui/form-control";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 
 
 type TargetDraft = {
@@ -389,7 +390,7 @@ export function TeacherMaterialLibraryPanel() {
 
       <section className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
         {error ? <p className="m-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700"><XCircle className="size-4" />{error}</p> : null}
-        <div className="min-h-0 shrink overflow-auto">
+        <TableScrollArea className="min-h-0 shrink">
           <Table className="min-w-[1050px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
@@ -493,7 +494,7 @@ export function TeacherMaterialLibraryPanel() {
               )) : null}
             </TableBody>
           </Table>
-        </div>
+        </TableScrollArea>
         <DataTableFooter
           className="shrink-0 bg-white"
           rowCount={pagedMaterials.length}
