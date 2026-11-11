@@ -21,3 +21,13 @@ export function visibleFilterCount(
   }
   return visible;
 }
+
+/** Filter values are primitives or flat records such as a date range. */
+export function filterValuesEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+  const a = left as Record<string, unknown>;
+  const b = right as Record<string, unknown>;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && Object.is(a[key], b[key]));
+}

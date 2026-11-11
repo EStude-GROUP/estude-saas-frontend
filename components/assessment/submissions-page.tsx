@@ -1,5 +1,5 @@
 "use client";
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { FEATURES } from "@/lib/features";
 
@@ -433,39 +433,35 @@ export function SubmissionsPage() {
             onChange={(event) => setStudentSearch(event.target.value)}
             placeholder="Tìm theo tên hoặc mã học sinh"
           />
-        </label>} filters={[{id:"participation",label:"Trạng thái tham gia",width:190,active:participationFilter !== "ALL",content:(<Select
+        </label>} filters={[defineToolbarFilter({ id:"participation", label:"Trạng thái tham gia", width:190, active:participationFilter !== "ALL", value: String(participationFilter), defaultValue: "ALL", onChange: (value) => setParticipationFilter(
+              value as typeof participationFilter,
+            ), render: (value, onChange) => (<Select
           aria-label="Lọc trạng thái tham gia"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
-          value={participationFilter}
-          onChange={(event) =>
-            setParticipationFilter(
-              event.target.value as typeof participationFilter,
-            )
-          }
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
         >
           <option value="ALL">Mọi trạng thái</option>
           <option value="NOT_STARTED">Chưa bắt đầu</option>
           <option value="IN_PROGRESS">Đang làm</option>
           <option value="SUBMITTED">Đã nộp</option>
-        </Select>)},
-{id:"grading",label:"Trạng thái chấm",width:200,active:gradingFilter !== "ALL",content:(<Select
+        </Select>) }),
+defineToolbarFilter({ id:"grading", label:"Trạng thái chấm", width:200, active:gradingFilter !== "ALL", value: String(gradingFilter), defaultValue: "ALL", onChange: (value) => setGradingFilter(value as typeof gradingFilter), render: (value, onChange) => (<Select
           aria-label="Lọc trạng thái chấm"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
-          value={gradingFilter}
-          onChange={(event) =>
-            setGradingFilter(event.target.value as typeof gradingFilter)
-          }
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
         >
           <option value="ALL">Mọi trạng thái chấm</option>
           <option value="COMPLETE">Đã đủ điểm</option>
           <option value="PARTIAL">Còn tự luận</option>
           <option value="PUBLISHED">Đã công bố điểm</option>
-        </Select>)},
-{id:"topic",label:"Chủ đề",width:200,active:topicFilter !== "ALL",content:(<Select
+        </Select>) }),
+defineToolbarFilter({ id:"topic", label:"Chủ đề", width:200, active:topicFilter !== "ALL", value: String(topicFilter), defaultValue: "ALL", onChange: (value) => setTopicFilter(value), render: (value, onChange) => (<Select
           aria-label="Lọc chủ đề cần hỗ trợ"
           className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-card"
-          value={topicFilter}
-          onChange={(event) => setTopicFilter(event.target.value)}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
         >
           <option value="ALL">Mọi chủ đề</option>
           {report.topicPerformance.map((topic) => (
@@ -476,15 +472,15 @@ export function SubmissionsPage() {
               {topic.topicName}
             </option>
           ))}
-        </Select>)},
-{id:"support",label:"Nhóm cần hỗ trợ",width:220,active:supportOnly,content:(<Button
-          variant={supportOnly ? "secondary" : "outline"}
-          aria-pressed={supportOnly}
-          onClick={() => setSupportOnly((value) => !value)}
+        </Select>) }),
+defineToolbarFilter({ id:"support", label:"Nhóm cần hỗ trợ", width:220, active:supportOnly, value: supportOnly, defaultValue: false, onChange: (value) => setSupportOnly(value), render: (value, onChange) => (<Button
+          variant={value ? "secondary" : "outline"}
+          aria-pressed={value}
+          onClick={() => onChange(!value)}
         >
           <UserRoundSearch className="size-4" />
           Chỉ nhóm cần hỗ trợ
-        </Button>)}]} onReset={()=>{setParticipationFilter("ALL");setGradingFilter("ALL");setTopicFilter("ALL");setSupportOnly(false);}} />
+        </Button>) })]}  />
 
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_auto]">
         <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-card">

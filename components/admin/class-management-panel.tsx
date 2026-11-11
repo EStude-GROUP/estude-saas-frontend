@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Edit3, LoaderCircle, Plus, Search, Settings2, Trash2, XCircle } from "lucide-react";
@@ -106,10 +106,10 @@ export function ClassManagementPanel() {
       <ResponsiveFilterToolbar
  search={<Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo mã hoặc tên lớp" />}
  filters={[
- { id: "year", label: "Năm học", width: 190, active: Boolean(yearFilter), content: (<CustomSelect value={yearFilter} options={[{ value: "", label: "Tất cả năm học" }, ...yearOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value) => { setYearFilter(value); setPage(1); }} />) },
- { id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), content: (<CustomSelect value={statusFilter} options={statusOptions} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value) => { setStatusFilter(value); setPage(1); }} />) }
+ defineToolbarFilter({ id: "year", label: "Năm học", width: 190, active: Boolean(yearFilter), value: String(yearFilter), defaultValue: "", onChange: (value) => { setYearFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect value={value} options={[{ value: "", label: "Tất cả năm học" }, ...yearOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={onChange} />) }),
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => { setStatusFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect value={value} options={statusOptions} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={onChange} />) })
  ]}
- onReset={() => { setYearFilter(""); setStatusFilter(""); setPage(1); }}
+
  actions={<div className="flex shrink-0 justify-end"><Button permission="classes.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Thêm lớp học</Button></div>}
  />
     </div>

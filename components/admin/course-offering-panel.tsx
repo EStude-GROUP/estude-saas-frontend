@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "@/components/ui/portal-link";
@@ -60,7 +60,7 @@ export function CourseOfferingPanel() {
   const [classFilter, setClassFilter] = useState("");
   const [termFilter, setTermFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [draftFilters, setDraftFilters] = useState({ yearId: "", classId: "", termId: "", status: "" });
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
@@ -70,7 +70,7 @@ export function CourseOfferingPanel() {
   const yearTerms = useMemo(() => terms.filter((term) => term.academicYearId === yearId && !term.deletedAt), [terms, yearId]);
   const yearClasses = useMemo(() => classes.filter((schoolClass) => schoolClass.academicYearId === yearId && schoolClass.isActive && !schoolClass.deletedAt), [classes, yearId]);
   const activeSubjects = useMemo(() => subjects.filter((subject) => subject.isActive && !subject.deletedAt), [subjects]);
-  const filterTerms = terms.filter((term) => !term.deletedAt && (!yearFilter || term.academicYearId === yearFilter));
+
   const filteredCourses = useMemo(() => courses.filter((course) => {
     if (classFilter && course.primaryClassId !== classFilter) return false;
     if (yearFilter && course.academicYearId !== yearFilter || termFilter && course.termId !== termFilter || statusFilter && course.status !== statusFilter) return false;
@@ -177,14 +177,14 @@ export function CourseOfferingPanel() {
       <ResponsiveFilterToolbar
  search={<Input containerClassName="search-field" icon={Search} className="!h-[42px]" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm môn, lớp hoặc giáo viên" aria-label="Tìm môn học theo lớp" />}
  filters={[
- {id:"year",label:"Năm học",width:190,active:Boolean(yearFilter),content:(inPopup)=>(<CustomSelect value={inPopup ? draftFilters.yearId : yearFilter} options={[{value:"",label:"Tất cả năm học"},...years.map((year)=>({value:year.id,label:year.name}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(value)=>{if(inPopup)setDraftFilters((current)=>({...current,yearId:value,termId:""}));else{setYearFilter(value);setTermFilter("");setPage(1);}}} />)},
- {id:"class",label:"Lớp học",width:190,active:Boolean(classFilter),content:(inPopup)=>(<CustomSelect value={inPopup ? draftFilters.classId : classFilter} searchable searchPlaceholder="Tìm lớp học..." options={[{value:"",label:"Tất cả lớp"},...classes.map((row)=>({value:row.id,label:row.name}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo lớp học" onValueChange={(value)=>{if(inPopup)setDraftFilters((current)=>({...current,classId:value}));else{setClassFilter(value);setPage(1);}}} />)},
- {id:"term",label:"Học kỳ",width:200,active:Boolean(termFilter),content:(inPopup)=>(<CustomSelect value={inPopup ? draftFilters.termId : termFilter} options={[{value:"",label:"Tất cả học kỳ"},...(inPopup ? terms.filter((term)=>!term.deletedAt&&(!draftFilters.yearId||term.academicYearId===draftFilters.yearId)):filterTerms).map((term)=>({value:term.id,label:(inPopup?draftFilters.yearId:yearFilter)?term.name:term.name+" · "+(years.find((year)=>year.id===term.academicYearId)?.name??"")}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" onValueChange={(value)=>{if(inPopup)setDraftFilters((current)=>({...current,termId:value}));else{setTermFilter(value);setPage(1);}}} />)},
- {id:"status",label:"Trạng thái",width:180,active:Boolean(statusFilter),content:(inPopup)=>(<CustomSelect value={inPopup ? draftFilters.status : statusFilter} options={[{value:"",label:"Tất cả trạng thái"},...Object.entries(courseStatusLabels).map(([value,label])=>({value,label}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={(value)=>{if(inPopup)setDraftFilters((current)=>({...current,status:value}));else{setStatusFilter(value);setPage(1);}}} />)}
+ defineToolbarFilter({ id: "year", label: "Năm học", width: 190, active: Boolean(yearFilter), value: String(yearFilter), defaultValue: "", onChange: (value) => { setYearFilter(value); setTermFilter(""); setPage(1); }, render: (value, onChange, { inPopup, setValue }) => (<CustomSelect value={value} options={[{ value: "", label: "Tất cả năm học" }, ...years.map((year) => ({ value: year.id, label: year.name }))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo năm học" onValueChange={(next) => { onChange(next); if (inPopup) setValue("term", ""); }} />) }),
+ defineToolbarFilter({ id:"class", label:"Lớp học", width:190, active:Boolean(classFilter), value: String(classFilter), defaultValue: "", onChange: (value) => {setClassFilter(value);setPage(1);}, render: (value, onChange) => (<CustomSelect value={value} searchable searchPlaceholder="Tìm lớp học..." options={[{value:"",label:"Tất cả lớp"},...classes.map((row)=>({value:row.id,label:row.name}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo lớp học" onValueChange={onChange} />) }),
+ defineToolbarFilter({ id:"term", label:"Học kỳ", width:200, active:Boolean(termFilter), value: String(termFilter), defaultValue: "", onChange: (value) => {setTermFilter(value);setPage(1);}, render: (value, onChange, { values }) => (<CustomSelect value={value} options={[{value:"",label:"Tất cả học kỳ"},...terms.filter((term)=>!term.deletedAt&&(!values.year||term.academicYearId===values.year)).map((term)=>({value:term.id,label:values.year?term.name:term.name+" · "+(years.find((year)=>year.id===term.academicYearId)?.name??"")}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" onValueChange={onChange} />) }),
+ defineToolbarFilter({ id:"status", label:"Trạng thái", width:180, active:Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => {setStatusFilter(value);setPage(1);}, render: (value, onChange) => (<CustomSelect value={value} options={[{value:"",label:"Tất cả trạng thái"},...Object.entries(courseStatusLabels).map(([value,label])=>({value,label}))]} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái" onValueChange={onChange} />) })
  ]}
- onOpen={()=>setDraftFilters({yearId:yearFilter,classId:classFilter,termId:termFilter,status:statusFilter})}
- onReset={()=>setDraftFilters({yearId:"",classId:"",termId:"",status:""})}
- popupFooter={(close)=><><Button variant="outline" onClick={close}>Hủy</Button><Button onClick={()=>{setYearFilter(draftFilters.yearId);setClassFilter(draftFilters.classId);setTermFilter(draftFilters.termId);setStatusFilter(draftFilters.status);setPage(1);close();}}>Áp dụng</Button></>}
+
+
+
  actions={<Button permission="course_offerings.create" className="!h-[42px] !rounded-lg" disabled={busy} onClick={openCreate}><Plus className="size-4" />Thêm môn cho lớp</Button>}
  />
     </div>

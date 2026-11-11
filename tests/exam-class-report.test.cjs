@@ -204,6 +204,7 @@ test("teacher class report separates students from attempts and supports reviewe
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (id) => {
     if (id === "@/components/ui/responsive-filter-toolbar") return {
+      defineToolbarFilter: require("./helpers/filter-toolbar.cjs").defineToolbarFilter,
       ResponsiveFilterToolbar: require("./helpers/filter-toolbar.cjs").filterToolbar(),
     };
     // Exercise this isolated screen with future module rollout enabled.

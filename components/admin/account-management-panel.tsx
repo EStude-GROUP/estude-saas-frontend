@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import {
   useCallback,
@@ -536,38 +536,38 @@ export function AccountManagementPanel() {
               placeholder="Tìm theo họ tên hoặc tên tài khoản"
             />}
  filters={[
- { id: "role", label: "Vai trò", width: 150, active: Boolean(roleFilter), content: (<CustomSelect
-              value={roleFilter}
+ defineToolbarFilter({ id: "role", label: "Vai trò", width: 150, active: Boolean(roleFilter), value: String(roleFilter), defaultValue: "", onChange: (value) => {
+                setRoleFilter(value);
+                setPage(1);
+              }, render: (value, onChange) => (<CustomSelect
+              value={value}
               options={roleFilterOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
               ariaLabel="Lọc theo vai trò"
-              onValueChange={(value) => {
-                setRoleFilter(value);
+              onValueChange={onChange}
+            />) }),
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 180, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => {
+                setStatusFilter(value);
                 setPage(1);
-              }}
-            />) },
- { id: "status", label: "Trạng thái", width: 180, active: Boolean(statusFilter), content: (<CustomSelect
-              value={statusFilter}
+              }, render: (value, onChange) => (<CustomSelect
+              value={value}
               options={statusFilterOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
               ariaLabel="Lọc theo trạng thái"
-              onValueChange={(value) => {
-                setStatusFilter(value);
-                setPage(1);
-              }}
-            />) },
- { id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, content: (<DateRangePicker
-              from={createdFrom}
-              to={createdTo}
-              buttonClassName="!h-[42px] !rounded-lg"
-              onChange={(value) => {
+              onValueChange={onChange}
+            />) }),
+ defineToolbarFilter({ id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, value: { from: createdFrom, to: createdTo }, defaultValue: { from: "", to: "" }, onChange: (value) => {
                 setCreatedFrom(value.from);
                 setCreatedTo(value.to);
                 setPage(1);
-              }}
-            />) }
+              }, render: (value, onChange) => (<DateRangePicker
+              from={value.from}
+              to={value.to}
+              buttonClassName="!h-[42px] !rounded-lg"
+              onChange={onChange}
+            />) })
  ]}
- onReset={() => { setRoleFilter(""); setStatusFilter(""); setCreatedFrom(""); setCreatedTo(""); setPage(1); }}
+
  actions={<div className="flex shrink-0 flex-nowrap justify-end gap-2">
             <Button permission="accounts.export"
               variant="outline"

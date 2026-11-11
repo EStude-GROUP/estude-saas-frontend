@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useEffect, useState } from "react";
 import { Download, FileSpreadsheet, LoaderCircle, RefreshCw, Search, Upload } from "lucide-react";
@@ -73,9 +73,9 @@ export function LegacyGradebookPanel({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [draftSubjectId, setDraftSubjectId] = useState(subjectId);
-  const [draftTermId, setDraftTermId] = useState(termId);
-  const [draftStatusFilter, setDraftStatusFilter] = useState("");
+
+
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [importOpen, setImportOpen] = useState(false);
@@ -314,12 +314,12 @@ export function LegacyGradebookPanel({
   return (
     <section className="space-y-4 py-1">
       <div className="relative rounded-xl border border-slate-200 bg-white shadow-card">
-        <ResponsiveFilterToolbar className="border-b border-slate-100 p-3" search={<Input containerClassName="search-field" icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />} filters={[{id:"subject",label:"Môn học",width:220,active:subjectId !== firstSubjectId,content:(inPopup)=>(<CustomSelect className="min-w-0 flex-[2]" value={inPopup ? draftSubjectId : subjectId} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={(value)=>{if(inPopup)setDraftSubjectId(value);else{setSubjectId(value);setPage(1);}}} />)},
-{id:"term",label:"Học kỳ",width:192,active:Boolean(defaultTermId && termId !== defaultTermId),content:(inPopup)=>(<CustomSelect className="min-w-0 flex-1" value={inPopup ? draftTermId : termId} options={terms.map((term) => ({ value: term.id, label: term.name }))} disabled={saving || Boolean(editing) || termsLoading || !terms.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" placeholder="Chưa có học kỳ" onValueChange={(value)=>{if(inPopup)setDraftTermId(value);else{setTermId(value);setPage(1);}}} />)},
-{id:"status",label:"Trạng thái",width:200,active:Boolean(statusFilter),content:(inPopup)=>(<CustomSelect className="min-w-0 flex-1" value={inPopup ? draftStatusFilter : statusFilter} options={statusOptions} disabled={Boolean(editing)} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái điểm" onValueChange={(value)=>{if(inPopup)setDraftStatusFilter(value);else{setStatusFilter(value);setPage(1);}}} />)}]}
- onOpen={()=>{setDraftSubjectId(subjectId);setDraftTermId(termId);setDraftStatusFilter(statusFilter);}}
- onReset={()=>{setDraftSubjectId(firstSubjectId);setDraftTermId(defaultTermId);setDraftStatusFilter("");}}
- popupFooter={(close)=><><Button variant="outline" onClick={close}>Hủy</Button><Button disabled={saving || Boolean(editing) || termsLoading} onClick={()=>{setSubjectId(draftSubjectId);setTermId(draftTermId);setStatusFilter(draftStatusFilter);setPage(1);setNotice("");close();}}>Áp dụng</Button></>}
+        <ResponsiveFilterToolbar applyDisabled={saving || Boolean(editing) || termsLoading} className="border-b border-slate-100 p-3" search={<Input containerClassName="search-field" icon={Search} aria-label="Tìm học sinh" value={search} disabled={Boolean(editing)} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm theo tên hoặc tài khoản" className="!h-[42px] !rounded-lg focus:!ring-0" />} filters={[defineToolbarFilter({ id:"subject", label:"Môn học", width:220, active:subjectId !== firstSubjectId, value: String(subjectId), defaultValue: firstSubjectId, onChange: (value) => {setSubjectId(value);setPage(1); setNotice(""); }, render: (value, onChange) => (<CustomSelect className="min-w-0 flex-[2]" value={value} options={schoolClass.subjects.map((subject) => ({ value: subject.id, label: subject.vietnameseName || subject.name }))} disabled={saving || Boolean(editing) || !schoolClass.subjects.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo môn học" placeholder="Chưa có môn học" onValueChange={onChange} />) }),
+defineToolbarFilter({ id:"term", label:"Học kỳ", width:192, active:Boolean(defaultTermId && termId !== defaultTermId), value: String(termId), defaultValue: defaultTermId, onChange: (value) => {setTermId(value);setPage(1); setNotice(""); }, render: (value, onChange) => (<CustomSelect className="min-w-0 flex-1" value={value} options={terms.map((term) => ({ value: term.id, label: term.name }))} disabled={saving || Boolean(editing) || termsLoading || !terms.length} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo học kỳ" placeholder="Chưa có học kỳ" onValueChange={onChange} />) }),
+defineToolbarFilter({ id:"status", label:"Trạng thái", width:200, active:Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => {setStatusFilter(value);setPage(1); setNotice(""); }, render: (value, onChange) => (<CustomSelect className="min-w-0 flex-1" value={value} options={statusOptions} disabled={Boolean(editing)} buttonClassName="!h-[42px] !rounded-lg !ring-0" ariaLabel="Lọc theo trạng thái điểm" onValueChange={onChange} />) })]}
+
+
+
  actions={<>{/* Existing grade actions */}<Button variant="plain" type="button" className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled={saving || Boolean(editing) || loading} onClick={() => { setNotice(""); setRefresh((value) => value + 1); }}>
             <RefreshCw className="size-4" />Tải lại
           </Button>

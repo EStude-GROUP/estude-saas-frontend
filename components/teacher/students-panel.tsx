@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useRouter } from "@/lib/portal-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -122,8 +122,11 @@ export function TeacherStudentsPanel() {
               placeholder="Tìm theo tên, email hoặc tài khoản"
             />}
  filters={[
- { id: "class", label: "Lớp học", width: 260, active: Boolean(classId), content: (<CustomSelect
-              value={classId}
+ defineToolbarFilter({ id: "class", label: "Lớp học", width: 260, active: Boolean(classId), value: String(classId), defaultValue: "", onChange: (value) => {
+                setClassId(value);
+                setPage(1);
+              }, render: (value, onChange) => (<CustomSelect
+              value={value}
               options={[
                 { value: "", label: "Tất cả lớp phụ trách" },
                 ...classes.map((schoolClass) => ({
@@ -133,13 +136,10 @@ export function TeacherStudentsPanel() {
               ]}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
               ariaLabel="Lọc theo lớp"
-              onValueChange={(value) => {
-                setClassId(value);
-                setPage(1);
-              }}
-            />) }
+              onValueChange={onChange}
+            />) })
  ]}
- onReset={() => { setClassId(""); setPage(1); }}
+
  />
       </div>
 

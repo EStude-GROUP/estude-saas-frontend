@@ -141,6 +141,7 @@ function loadTeacher(view, save, extraService = {}) {
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
     if (id === "@/components/ui/responsive-filter-toolbar") return {
+      defineToolbarFilter: require("./helpers/filter-toolbar.cjs").defineToolbarFilter,
       ResponsiveFilterToolbar: require("./helpers/filter-toolbar.cjs").filterToolbar(true),
     };
     if (id === "@/components/ui/modal") return {

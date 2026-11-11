@@ -1,7 +1,7 @@
 require("./helpers/register-ui.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { visibleFilterCount } = require("../lib/responsive-filters.ts");
+const { visibleFilterCount, filterValuesEqual } = require("../lib/responsive-filters.ts");
 
 test("all filters remain inline when they fit, including the exact boundary", () => {
   assert.equal(visibleFilterCount(972, [192, 192, 192], 360), 3);
@@ -31,4 +31,35 @@ test("filter-only toolbars and actual control widths are supported", () => {
   assert.equal(visibleFilterCount(412, [160, 240]), 2);
   assert.equal(visibleFilterCount(411, [160, 240]), 0);
   assert.equal(visibleFilterCount(900, [150, 180, 230], 360), 1);
+});
+
+test("unchanged primitive filters do not need applying, including empty and false values", () => {
+  assert.equal(filterValuesEqual("", ""), true);
+  assert.equal(filterValuesEqual(false, false), true);
+  assert.equal(filterValuesEqual(false, ""), false);
+  assert.equal(filterValuesEqual("ACTIVE", "PENDING"), false);
+});
+
+test("date drafts compare values rather than object identity or key order", () => {
+  assert.equal(filterValuesEqual({ from: "2026-11-01", to: "2026-11-11" }, { to: "2026-11-11", from: "2026-11-01" }), true);
+  assert.equal(filterValuesEqual({ from: "2026-11-01", to: "" }, { from: "2026-11-01", to: "2026-11-11" }), false);
+  assert.equal(filterValuesEqual({ from: "", to: "" }, { from: "" }), false);
+});
+
+test("rendering and editing a filter draft never invokes its applied change callback", () => {
+  const React = require("react");
+  const { defineToolbarFilter } = require("../components/ui/responsive-filter-toolbar.tsx");
+  const applied = [];
+  const pending = [];
+  const filter = defineToolbarFilter({
+    id: "status", label: "Trạng thái", value: "ACTIVE", defaultValue: "",
+    onChange: (value) => applied.push(value),
+    render: (value, onChange) => React.createElement("input", { value, onChange: (event) => onChange(event.target.value) }),
+  });
+  const input = filter.render("ACTIVE", (value) => pending.push(value), { inPopup: true, values: {}, setValue() {} });
+  input.props.onChange({ target: { value: "PENDING" } });
+  assert.deepEqual(pending, ["PENDING"]);
+  assert.deepEqual(applied, []);
+  filter.apply(pending[0]);
+  assert.deepEqual(applied, ["PENDING"]);
 });

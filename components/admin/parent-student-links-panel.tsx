@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Edit3, Link2, LoaderCircle, Plus, Search, Unlink, XCircle } from "lucide-react";
@@ -287,11 +287,11 @@ export function ParentStudentLinksPanel() {
             containerClassName="sm:max-w-80"
               />}
  filters={[
- { id: "status", label: "Trạng thái", width: 208, active: Boolean(statusFilter), content: (<CustomSelect className="w-full sm:w-52" value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />) },
- { id: "class", label: "Lớp học", width: 224, active: Boolean(classFilter), content: (<CustomSelect className="w-full sm:w-56" value={classFilter} onValueChange={(value) => { setClassFilter(value); setPage(1); }} options={[{ value: "", label: "Tất cả lớp học" }, ...classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))]} ariaLabel="Lọc theo lớp học" searchable />) },
- { id: "dates", label: "Ngày liên kết", width: 240, active: Boolean(linkedDateRange.from || linkedDateRange.to), fullWidth: true, content: (<DateRangePicker {...linkedDateRange} onChange={(value) => { setLinkedDateRange(value); setPage(1); }} onClear={resetFilters} className="w-full sm:w-60" buttonClassName="!h-[42px] !rounded-lg !px-2.5 !ring-0" />) }
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 208, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => { setStatusFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect className="w-full sm:w-52" value={value} onValueChange={onChange} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />) }),
+ defineToolbarFilter({ id: "class", label: "Lớp học", width: 224, active: Boolean(classFilter), value: String(classFilter), defaultValue: "", onChange: (value) => { setClassFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect className="w-full sm:w-56" value={value} onValueChange={onChange} options={[{ value: "", label: "Tất cả lớp học" }, ...classes.map((item) => ({ value: item.id, label: `${item.code} · ${item.name}` }))]} ariaLabel="Lọc theo lớp học" searchable />) }),
+ defineToolbarFilter({ id: "dates", label: "Ngày liên kết", width: 240, active: Boolean(linkedDateRange.from || linkedDateRange.to), fullWidth: true, value: linkedDateRange, defaultValue: { from: "", to: "" }, onChange: (value) => { setLinkedDateRange(value); setPage(1); }, render: (value, onChange) => (<DateRangePicker {...value} onChange={onChange} onClear={() => onChange({ from: "", to: "" })} className="w-full sm:w-60" buttonClassName="!h-[42px] !rounded-lg !px-2.5 !ring-0" />) })
  ]}
- onReset={() => { resetFilters(); }}
+
  actions={<Button
             permission="parent_links.assign"
             className="h-[42px] shrink-0 !rounded-lg"

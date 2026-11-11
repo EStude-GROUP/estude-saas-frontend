@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 import { answerReleaseLabel } from "@/lib/exam-answer-release";
 
@@ -345,8 +345,11 @@ export function TeacherExamsPage() {
                 placeholder="Tìm theo tên bài, môn học hoặc lớp"
               />}
  filters={[
- { id: "status", label: "Trạng thái", width: 180, active: statusFilter !== "ALL", content: (<CustomSelect
-                value={statusFilter}
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 180, active: statusFilter !== "ALL", value: String(statusFilter), defaultValue: "ALL", onChange: (value) => {
+                  setStatusFilter(value as "ALL" | Exam["status"]);
+                  setPage(1);
+                }, render: (value, onChange) => (<CustomSelect
+                value={value}
                 options={[
                   { value: "ALL", label: "Tất cả trạng thái" },
                   { value: "DRAFT", label: "Bản nháp" },
@@ -356,13 +359,13 @@ export function TeacherExamsPage() {
                 ]}
                 buttonClassName="!h-[42px] !rounded-lg !ring-0"
                 ariaLabel="Lọc theo trạng thái"
-                onValueChange={(value) => {
-                  setStatusFilter(value as "ALL" | Exam["status"]);
+                onValueChange={onChange}
+              />) }),
+ defineToolbarFilter({ id: "class", label: "Lớp học", width: 220, active: classFilter !== "ALL", value: String(classFilter), defaultValue: "ALL", onChange: (value) => {
+                  setClassFilter(value);
                   setPage(1);
-                }}
-              />) },
- { id: "class", label: "Lớp học", width: 220, active: classFilter !== "ALL", content: (<CustomSelect
-                value={classFilter}
+                }, render: (value, onChange) => (<CustomSelect
+                value={value}
                 options={[
                   { value: "ALL", label: "Tất cả lớp" },
                   ...assignedClasses.map((schoolClass) => ({
@@ -376,13 +379,10 @@ export function TeacherExamsPage() {
                 ]}
                 buttonClassName="!h-[42px] !rounded-lg !ring-0"
                 ariaLabel="Lọc theo lớp"
-                onValueChange={(value) => {
-                  setClassFilter(value);
-                  setPage(1);
-                }}
-              />) }
+                onValueChange={onChange}
+              />) })
  ]}
- onReset={() => { setStatusFilter("ALL"); setClassFilter("ALL"); setPage(1); }}
+
  actions={<div className="flex shrink-0 flex-nowrap justify-end gap-2">
               <Button permission="exams.create"
                 className="!h-[42px] !rounded-lg"

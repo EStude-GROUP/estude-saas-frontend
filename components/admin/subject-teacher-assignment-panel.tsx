@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { BookOpen, Check, ChevronsUpDown, Edit3, LoaderCircle, Plus, Search, Trash2, XCircle } from "lucide-react";
@@ -379,11 +379,11 @@ export function SubjectTeacherAssignmentPanel() {
         <ResponsiveFilterToolbar
  search={<Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Tìm giáo viên, môn học hoặc lớp" />}
  filters={[
- { id: "class", label: "Lớp học", width: 190, active: Boolean(classFilter), content: (<CustomSelect searchable isSearching={isClassSearching} onSearchChange={(value) => void searchClassOptions(value)} searchPlaceholder="Tìm lớp học..." value={classFilter} options={[{ value: "", label: "Tất cả lớp học" }, ...classOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setClassFilter(value); setPage(1); }} ariaLabel="Lọc theo lớp học" />) },
- { id: "subject", label: "Môn học", width: 190, active: Boolean(subjectFilter), content: (<CustomSelect searchable isSearching={isSubjectSearching} onSearchChange={(value) => void searchSubjectOptions(value)} searchPlaceholder="Tìm môn học..." value={subjectFilter} options={[{ value: "", label: "Tất cả môn học" }, ...subjectOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setSubjectFilter(value); setPage(1); }} ariaLabel="Lọc theo môn học" />) },
- { id: "teacher", label: "Giáo viên", width: 220, active: Boolean(teacherFilter), content: (<CustomSelect searchable isSearching={isTeacherSearching} onSearchChange={(value) => void searchTeacherOptions(value)} searchPlaceholder="Tìm giáo viên..." value={teacherFilter} options={[{ value: "", label: "Tất cả giáo viên" }, ...teacherOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={(value) => { setTeacherFilter(value); setPage(1); }} ariaLabel="Lọc theo giáo viên" />) }
+ defineToolbarFilter({ id: "class", label: "Lớp học", width: 190, active: Boolean(classFilter), value: String(classFilter), defaultValue: "", onChange: (value) => { setClassFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect searchable isSearching={isClassSearching} onSearchChange={(value) => void searchClassOptions(value)} searchPlaceholder="Tìm lớp học..." value={value} options={[{ value: "", label: "Tất cả lớp học" }, ...classOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={onChange} ariaLabel="Lọc theo lớp học" />) }),
+ defineToolbarFilter({ id: "subject", label: "Môn học", width: 190, active: Boolean(subjectFilter), value: String(subjectFilter), defaultValue: "", onChange: (value) => { setSubjectFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect searchable isSearching={isSubjectSearching} onSearchChange={(value) => void searchSubjectOptions(value)} searchPlaceholder="Tìm môn học..." value={value} options={[{ value: "", label: "Tất cả môn học" }, ...subjectOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={onChange} ariaLabel="Lọc theo môn học" />) }),
+ defineToolbarFilter({ id: "teacher", label: "Giáo viên", width: 220, active: Boolean(teacherFilter), value: String(teacherFilter), defaultValue: "", onChange: (value) => { setTeacherFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect searchable isSearching={isTeacherSearching} onSearchChange={(value) => void searchTeacherOptions(value)} searchPlaceholder="Tìm giáo viên..." value={value} options={[{ value: "", label: "Tất cả giáo viên" }, ...teacherOptions]} buttonClassName="!h-[42px] !rounded-lg !ring-0" onValueChange={onChange} ariaLabel="Lọc theo giáo viên" />) })
  ]}
- onReset={() => { setClassFilter(""); setSubjectFilter(""); setTeacherFilter(""); setPage(1); }}
+
  actions={<Button permission="assignments.create" className="!h-[42px] !rounded-lg" onClick={openCreate}><Plus className="size-4" />Tạo phân công</Button>}
  />
       </div>

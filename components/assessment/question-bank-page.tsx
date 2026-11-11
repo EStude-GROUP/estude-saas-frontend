@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { FEATURES } from "@/lib/features";
 
@@ -407,8 +407,11 @@ export function QuestionBankPage() {
                   placeholder="Tìm theo nội dung câu hỏi..."
                 />}
  filters={[
- { id: "difficulty", label: "Độ khó", width: 200, active: Boolean(difficulty), content: (<CustomSelect
-                  value={difficulty}
+ defineToolbarFilter({ id: "difficulty", label: "Độ khó", width: 200, active: Boolean(difficulty), value: String(difficulty), defaultValue: "", onChange: (value) => {
+                    setPage(1);
+                    setDifficulty(value as Difficulty | "");
+                  }, render: (value, onChange) => (<CustomSelect
+                  value={value}
                   options={[
                     { value: "", label: "Mọi độ khó" },
                     ...Object.entries(DIFFICULTY_LABELS).map(
@@ -417,13 +420,13 @@ export function QuestionBankPage() {
                   ]}
                   buttonClassName="!h-[42px] !rounded-lg focus:!ring-0"
                   ariaLabel="Lọc theo độ khó"
-                  onValueChange={(value) => {
+                  onValueChange={onChange}
+                />) }),
+ defineToolbarFilter({ id: "type", label: "Loại câu hỏi", width: 200, active: Boolean(type), value: String(type), defaultValue: "", onChange: (value) => {
                     setPage(1);
-                    setDifficulty(value as Difficulty | "");
-                  }}
-                />) },
- { id: "type", label: "Loại câu hỏi", width: 200, active: Boolean(type), content: (<CustomSelect
-                  value={type}
+                    setType(value as QuestionType | "");
+                  }, render: (value, onChange) => (<CustomSelect
+                  value={value}
                   options={[
                     { value: "", label: "Mọi loại câu hỏi" },
                     ...Object.entries(QUESTION_TYPE_LABELS).map(
@@ -432,13 +435,10 @@ export function QuestionBankPage() {
                   ]}
                   buttonClassName="!h-[42px] !rounded-lg focus:!ring-0"
                   ariaLabel="Lọc theo loại câu hỏi"
-                  onValueChange={(value) => {
-                    setPage(1);
-                    setType(value as QuestionType | "");
-                  }}
-                />) }
+                  onValueChange={onChange}
+                />) })
  ]}
- onReset={() => { setDifficulty(""); setType(""); setPage(1); }}
+
  actions={<div className="flex min-w-0 flex-wrap justify-start gap-2 sm:justify-end 2xl:shrink-0">
               {selectedIds.length ? (
                 <>

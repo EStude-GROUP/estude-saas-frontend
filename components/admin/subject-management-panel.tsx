@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
@@ -229,18 +229,18 @@ export function SubjectManagementPanel() {
                 placeholder="Tìm theo mã hoặc tên môn học"
             />}
  filters={[
- { id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), content: (<CustomSelect
-              value={statusFilter}
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 200, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => {
+                setStatusFilter(value);
+                setPage(1);
+              }, render: (value, onChange) => (<CustomSelect
+              value={value}
               options={statusOptions}
               buttonClassName="!h-[42px] !rounded-lg !ring-0"
               ariaLabel="Lọc theo trạng thái"
-              onValueChange={(value) => {
-                setStatusFilter(value);
-                setPage(1);
-              }}
-            />) }
+              onValueChange={onChange}
+            />) })
  ]}
- onReset={() => { setStatusFilter(""); setPage(1); }}
+
  actions={<div className="flex shrink-0 justify-end gap-2">
             <Button permission="subjects.create" className="!h-[42px] !rounded-lg" onClick={openCreate}>
               <Plus className="size-4" />

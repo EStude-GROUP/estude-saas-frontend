@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "@/lib/portal-navigation";
@@ -284,28 +284,28 @@ export function UserManagementPanel({ role }: { role: ManagedRole }) {
             placeholder="Tìm theo họ tên hoặc mã người dùng"
           />}
  filters={[
- { id: "status", label: "Trạng thái", width: 190, active: Boolean(statusFilter), content: (<CustomSelect
-            value={statusFilter}
+ defineToolbarFilter({ id: "status", label: "Trạng thái", width: 190, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => {
+              setStatusFilter(value);
+              setPage(1);
+            }, render: (value, onChange) => (<CustomSelect
+            value={value}
             options={statusFilterOptions}
             buttonClassName="!h-[42px] !rounded-lg !ring-0"
             ariaLabel="Lọc theo trạng thái"
-            onValueChange={(value) => {
-              setStatusFilter(value);
-              setPage(1);
-            }}
-          />) },
- { id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, content: (<DateRangePicker
-            from={createdFrom}
-            to={createdTo}
-            buttonClassName="!h-[42px] !rounded-lg"
-            onChange={(value) => {
+            onValueChange={onChange}
+          />) }),
+ defineToolbarFilter({ id: "dates", label: "Ngày tạo", width: 230, active: Boolean(createdFrom || createdTo), fullWidth: true, value: { from: createdFrom, to: createdTo }, defaultValue: { from: "", to: "" }, onChange: (value) => {
               setCreatedFrom(value.from);
               setCreatedTo(value.to);
               setPage(1);
-            }}
-          />) }
+            }, render: (value, onChange) => (<DateRangePicker
+            from={value.from}
+            to={value.to}
+            buttonClassName="!h-[42px] !rounded-lg"
+            onChange={onChange}
+          />) })
  ]}
- onReset={() => { setStatusFilter(""); setCreatedFrom(""); setCreatedTo(""); setPage(1); }}
+
  />
       </div>
 

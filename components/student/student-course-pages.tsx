@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
+import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { OnlineSessionPanel } from "@/components/online-sessions/session-panel";
 import { FEATURES } from "@/lib/features";
@@ -172,10 +172,10 @@ export function StudentCoursesPage() {
  className="border-t border-slate-100 bg-slate-50/70 p-4"
  search={<Input containerClassName="search-field" icon={Search} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên môn, mã môn, lớp hoặc giáo viên..." aria-label="Tìm môn học" />}
  filters={[
- { id: "class", label: "Lớp học", width: 260, active: classFilter !== "all", content: (<CustomSelect value={classFilter} options={classOptions} onValueChange={setClassFilter} ariaLabel="Lọc theo lớp học" />) },
- { id: "sort", label: "Sắp xếp", width: 220, active: sortBy !== "subject", content: (<CustomSelect value={sortBy} options={[{ value: "subject", label: "Sắp xếp: Tên môn" }, { value: "code", label: "Sắp xếp: Mã môn" }, { value: "class", label: "Sắp xếp: Mã lớp" }]} onValueChange={(value) => setSortBy(value as typeof sortBy)} ariaLabel="Sắp xếp môn học" />) }
+ defineToolbarFilter({ id: "class", label: "Lớp học", width: 260, active: classFilter !== "all", value: String(classFilter), defaultValue: "all", onChange: setClassFilter, render: (value, onChange) => (<CustomSelect value={value} options={classOptions} onValueChange={onChange} ariaLabel="Lọc theo lớp học" />) }),
+ defineToolbarFilter({ id: "sort", label: "Sắp xếp", width: 220, active: sortBy !== "subject", value: String(sortBy), defaultValue: "subject", onChange: (value) => setSortBy(value as typeof sortBy), render: (value, onChange) => (<CustomSelect value={value} options={[{ value: "subject", label: "Sắp xếp: Tên môn" }, { value: "code", label: "Sắp xếp: Mã môn" }, { value: "class", label: "Sắp xếp: Mã lớp" }]} onValueChange={onChange} ariaLabel="Sắp xếp môn học" />) })
  ]}
- onReset={() => { setClassFilter("all"); setSortBy("subject"); }}
+
  />
       </section>
       {error ? <ErrorPanel message={error} /> : null}
