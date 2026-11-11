@@ -5,7 +5,7 @@ const ts = require("typescript"); const React = require("react"); const {create,
 global.IS_REACT_ACT_ENVIRONMENT=true;
 function load(file,mocks={}) {const filename=path.resolve(file);const mod=new Module(filename,module);mod.filename=filename;mod.paths=Module._nodeModulePaths(path.dirname(filename));const original=mod.require.bind(mod);mod.require=(id)=>Object.hasOwn(mocks,id)?mocks[id]:original(id);mod._compile(ts.transpileModule(fs.readFileSync(filename,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);return mod.exports;}
 const view = load("lib/online-session-view.ts");
-const tableUI = load("components/ui/data-table.tsx", { "@/lib/cn": { cn: (...values) => values.filter(Boolean).join(" ") } });
+const tableUI = load("components/ui/data-table.tsx", { "@/components/ui/loading-bar": load("components/ui/loading-bar.tsx"), "@/lib/cn": { cn: (...values) => values.filter(Boolean).join(" ") } });
 async function setup(t,overrides={}) {
  const writes=[],saved=[],closed=[];
  const {OnlineSessionEditor}=load("components/online-sessions/session-editor.tsx",{

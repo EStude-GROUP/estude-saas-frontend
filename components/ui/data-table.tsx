@@ -7,6 +7,7 @@ import type {
 } from "react";
 import { TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { LoadingBar } from "@/components/ui/loading-bar";
 
 export function Table({
   className,
@@ -78,9 +79,7 @@ export function TableLoadingBarRow({ colSpan }: { colSpan: number }) {
   return (
     <tr data-table-loading aria-label="Đang tải dữ liệu">
       <TableCell colSpan={colSpan} className="!p-0">
-        <div className="table-loading-track" role="progressbar">
-          <span className="table-loading-indicator" />
-        </div>
+        <LoadingBar />
       </TableCell>
     </tr>
   );

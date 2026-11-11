@@ -13,6 +13,7 @@ import { useRouter } from "@/lib/portal-navigation";
 import { courseOfferingApi, type CourseOffering } from "@/lib/course-offering-api";
 import { courseSummary, termAction, termsForYear } from "@/lib/academic-calendar";
 import { Button } from "@/components/ui/button";
+import { LoadingBar } from "@/components/ui/loading-bar";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input, Select } from "@/components/ui/form-control";
@@ -226,6 +227,8 @@ export function AcademicDataPanel() {
     }, "Không thể xóa dữ liệu");
   }
 
+  if (loading && !years.length && !error) return <AcademicDataLoading />;
+
   return (
     <div className="pb-4">
       {error && <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void load()}>Thử lại</Button></div>}
@@ -233,7 +236,7 @@ export function AcademicDataPanel() {
       <div className="grid items-start gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card" aria-label="Danh sách năm học">
           <div className="mb-3 flex items-center justify-between gap-2"><div className="flex items-center gap-1"><h2 className="font-extrabold text-slate-900">Năm học</h2><InfoTooltip label="Thông tin năm học" content="Chọn năm học để xem học kỳ tương ứng. Năm đã hoàn tất chỉ dùng để tra cứu lịch sử." /></div><Button permission="academic.create" variant="secondary" size="sm" aria-label="Thêm năm học" onClick={addYear}><Plus className="size-4" /></Button></div>
-          {loading ? <div className="flex items-center gap-2 py-8 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải năm học…</div> : !years.length ? <p className="py-6 text-sm text-slate-500">Chưa có năm học. Thêm niên khóa đầu tiên để bắt đầu.</p> : (
+          {!years.length ? <p className="py-6 text-sm text-slate-500">Chưa có năm học. Thêm niên khóa đầu tiên để bắt đầu.</p> : (
             <div className="space-y-2">{years.map((year) => {
               const selected = year.id === selectedYearId;
               return <div key={year.id} className={`rounded-xl border transition ${selected ? "border-brand-300 bg-brand-50/70 ring-1 ring-brand-100" : "border-slate-100 bg-white hover:border-slate-200"}`}>
@@ -247,6 +250,7 @@ export function AcademicDataPanel() {
           {selectedYear ? <>
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3 p-3 sm:p-4"><div><div className="flex flex-wrap items-center gap-3"><h2 className="text-2xl font-extrabold tracking-tight text-slate-900">{selectedYear.name}</h2><Badge label={yearStatusLabels[selectedYear.status]} status={selectedYear.status} /></div><p className="mt-2 text-sm text-slate-500">{displayDate(selectedYear.startsAt)} – {displayDate(selectedYear.endsAt, selectedYear.dateBoundaryMode === "EXCLUSIVE")}</p></div><div className="flex gap-2"><Button variant="outline" size="sm" disabled={saving || overviewLoading} aria-label="Làm mới dữ liệu học vụ" title="Làm mới" onClick={() => void load()}><RefreshCw className={`size-4 ${overviewLoading ? "animate-spin" : ""}`} /></Button><Button permission="academic.create" size="sm" onClick={addYear}><Plus className="size-4" />Năm học mới</Button></div></div>
+              {overviewLoading && <LoadingBar label="Đang tải số liệu học vụ" />}
               <div className="grid grid-cols-2 gap-px border-t border-slate-100 bg-slate-100 lg:grid-cols-4">
                 <Metric icon={School} label="Lớp học" value={overviewLoading ? null : yearClasses?.length ?? null} />
                 <Metric icon={BookOpen} label="Lớp môn học" value={overviewLoading ? null : summary?.courses ?? null} />
@@ -479,6 +483,26 @@ function Actions({
     </div>
   );
 }
+function AcademicDataLoading() {
+  return <div aria-busy="true" className="space-y-3 pb-4">
+    <LoadingBar label="Đang tải dữ liệu học vụ" className="rounded-full" />
+    <div aria-hidden="true" className="grid items-start gap-3 motion-safe:animate-pulse xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-card">
+        <div className="flex items-center justify-between"><div className="h-5 w-20 rounded bg-slate-200" /><div className="size-8 rounded-lg bg-slate-100" /></div>
+        {[0, 1, 2].map((item) => <div key={item} className="space-y-3 rounded-xl border border-slate-100 p-3"><div className="h-5 w-28 rounded bg-slate-200" /><div className="h-4 w-20 rounded-full bg-slate-100" /></div>)}
+      </div>
+      <div className="min-w-0 space-y-3">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="space-y-3 p-3 sm:p-4"><div className="h-7 w-40 rounded bg-slate-200" /><div className="h-4 w-48 max-w-full rounded bg-slate-100" /></div>
+          <div className="grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100 lg:grid-cols-4">{[0, 1, 2, 3].map((item) => <div key={item} className="space-y-3 p-3"><div className="h-3 w-20 rounded bg-slate-100" /><div className="h-7 w-12 rounded bg-slate-200" /></div>)}</div>
+        </div>
+        <div className="h-5 w-20 rounded bg-slate-200" />
+        {[0, 1].map((item) => <div key={item} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card"><div className="flex items-center gap-3 p-3 sm:p-4"><div className="size-11 shrink-0 rounded-xl bg-slate-100" /><div className="min-w-0 space-y-2"><div className="h-5 w-32 rounded bg-slate-200" /><div className="h-3 w-44 max-w-full rounded bg-slate-100" /></div></div><div className="px-3 pb-3 sm:px-4"><div className="h-3 w-56 max-w-full rounded bg-slate-100" /></div><div className="flex justify-end border-t border-slate-100 px-3 py-2 sm:px-4"><div className="h-8 w-32 rounded-lg bg-slate-100" /></div></div>)}
+      </div>
+    </div>
+  </div>;
+}
+
 function Badge({ label, status }: { label: string; status: string }) {
   const tone =
     status === "ACTIVE"
