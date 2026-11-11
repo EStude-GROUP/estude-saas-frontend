@@ -1,8 +1,5 @@
 "use client";
-import {
-  AttendancePolicyPanel,
-  SystemNotificationComposer,
-} from "@/components/admin/engagement-settings";
+import { SystemNotificationComposer } from "@/components/admin/engagement-settings";
 
 import { useEffect, useRef, useState } from "react";
 import { useWorkspacePathname, useRouter } from "@/lib/portal-navigation";
@@ -101,11 +98,6 @@ const settingsSubItems = [
     section: "permissions",
   },
   {
-    label: "Điểm danh GPS/QR",
-    href: "/admin/settings/attendance",
-    section: "attendance",
-  },
-  {
     label: "Thông báo tự động",
     href: "/admin/settings/notifications",
     section: "notifications",
@@ -143,7 +135,7 @@ const settingsSubItems = [
 ] satisfies Array<{
   label: string;
   href: string;
-  section: SystemSettingsSection | "permissions" | "billing";
+  section: SystemSettingsSection | "permissions" | "billing" | "notifications" | "ai-question";
 }>;
 
 const userSubItems = [
@@ -308,7 +300,7 @@ export function StaffDashboardView() {
   const isSettingsPage = pathname.startsWith("/admin/settings/");
   const settingsSection =
     settingsSubItems.find((item) => item.href === pathname)?.section ??
-    "attendance";
+    "security";
   const activeMenuLabel = pathname.startsWith("/admin/settings")
     ? (settingsSubItems.find((item) => item.href === pathname)?.label ??
       "Cấu hình hệ thống")
@@ -766,8 +758,6 @@ export function StaffDashboardView() {
               </>
             ) : isSettingsPage && settingsSection === "billing" ? (
               <BillingPanel />
-            ) : isSettingsPage && settingsSection === "attendance" ? (
-              <AttendancePolicyPanel />
             ) : isSettingsPage ? (
               <SystemSettingsPanel
                 section={settingsSection as SystemSettingsSection}

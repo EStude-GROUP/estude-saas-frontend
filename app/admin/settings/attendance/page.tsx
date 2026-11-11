@@ -1,10 +1,5 @@
-import { RoleGate } from "@/components/auth/role-gate";
-import { StaffDashboardView } from "@/components/dashboard/staff-dashboard-view";
+import { portalRedirect as redirect } from "@/lib/portal-redirect";
 
 export default function AttendanceSettingsPage() {
-  return (
-    <RoleGate allowedRole="ADMIN">
-      <StaffDashboardView />
-    </RoleGate>
-  );
+  return redirect("/admin/settings/security");
 }

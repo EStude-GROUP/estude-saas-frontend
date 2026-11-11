@@ -4,12 +4,9 @@ import { ChangePasswordForm } from "@/components/auth/change-password-form";
 
 import { useEffect, useState } from "react";
 import {
-  Bell,
   ChevronRight,
   KeyRound,
   LoaderCircle,
-  Mail,
-  MapPin,
   Save,
   ShieldCheck,
   UsersRound,
@@ -17,7 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "@/lib/portal-navigation";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/form-control";
+import { Input } from "@/components/ui/form-control";
 import { useActionNotification } from "@/components/ui/action-notification";
 import { ApiError, authenticatedRequest } from "@/lib/auth-api";
 import type {
@@ -96,35 +93,18 @@ function SectionHeader({
 }
 
 export type SystemSettingsSection =
-  | "attendance"
-  | "notifications"
   | "performance"
-  | "ai-question"
   | "default-passwords"
   | "parent-links"
   | "security";
 
 export function SystemSettingsPanel({
-  section = "attendance",
+  section,
 }: {
-  section?: SystemSettingsSection;
+  section: SystemSettingsSection;
 }) {
   const router = useRouter();
   const { notify } = useActionNotification();
-  const [attendance, setAttendance] = useState({
-    gpsRadius: "100",
-    gpsValidity: "30",
-    qrValidity: "60",
-    gpsEnabled: true,
-    qrEnabled: true,
-  });
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    inApp: true,
-    sender: "no-reply@estude.edu.vn",
-    replyTo: "support@estude.edu.vn",
-  });
   const [teacherDefaultPassword, setTeacherDefaultPassword] = useState("");
   const [studentDefaultPassword, setStudentDefaultPassword] = useState("");
   const [parentDefaultPassword, setParentDefaultPassword] = useState("");
@@ -260,160 +240,11 @@ export function SystemSettingsPanel({
       }
       return;
     }
-    notify("Đã lưu cấu hình hệ thống", { key: "system-settings-saved" });
   }
 
   return (
     <div className="w-full pb-8">
-      {section !== "default-passwords" &&
-      section !== "parent-links" &&
-      section !== "performance" &&
-      section !== "security" ? (
-        <div className="mb-3 flex justify-end">
-          <Button
-            permission="system_settings.update"
-            className="w-fit !rounded-lg"
-            onClick={() => void handleSave()}
-          >
-            <Save className="size-4" />
-            Lưu cấu hình
-          </Button>
-        </div>
-      ) : null}
-
       <div className="grid gap-4">
-        <section
-          className={`${section === "attendance" ? "" : "hidden"} rounded-2xl border border-slate-200 bg-white p-5 shadow-card sm:p-6`}
-        >
-          <SectionHeader
-            icon={MapPin}
-            title="Điểm danh GPS/QR"
-            description="Kiểm soát phạm vi và thời gian hiệu lực của mỗi lượt điểm danh."
-            tone="bg-blue-50 text-brand-600"
-          />
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Input
-              type="number"
-              min="1"
-              label="Bán kính GPS"
-              value={attendance.gpsRadius}
-              onChange={(event) =>
-                setAttendance({ ...attendance, gpsRadius: event.target.value })
-              }
-              hint="Đơn vị: mét"
-            />
-            <Input
-              type="number"
-              min="1"
-              label="Hiệu lực GPS"
-              value={attendance.gpsValidity}
-              onChange={(event) =>
-                setAttendance({
-                  ...attendance,
-                  gpsValidity: event.target.value,
-                })
-              }
-              hint="Đơn vị: phút"
-            />
-            <Input
-              type="number"
-              min="1"
-              label="Hiệu lực mã QR"
-              value={attendance.qrValidity}
-              onChange={(event) =>
-                setAttendance({ ...attendance, qrValidity: event.target.value })
-              }
-              hint="Thời gian trước khi mã hết hạn"
-            />
-            <Select label="Cách xác thực ưu tiên" defaultValue="both">
-              <option value="both">GPS và QR</option>
-              <option value="gps">Chỉ GPS</option>
-              <option value="qr">Chỉ QR</option>
-            </Select>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            <SettingSwitch
-              checked={attendance.gpsEnabled}
-              onChange={(gpsEnabled) =>
-                setAttendance({ ...attendance, gpsEnabled })
-              }
-              label="Cho phép điểm danh bằng GPS"
-              description="Học sinh cần ở trong bán kính cho phép của lớp học."
-            />
-            <SettingSwitch
-              checked={attendance.qrEnabled}
-              onChange={(qrEnabled) =>
-                setAttendance({ ...attendance, qrEnabled })
-              }
-              label="Cho phép điểm danh bằng mã QR"
-              description="Mã QR được tạo theo từng buổi học và tự động hết hiệu lực."
-            />
-          </div>
-        </section>
-
-        <section
-          className={`${section === "notifications" ? "" : "hidden"} rounded-2xl border border-slate-200 bg-white p-5 shadow-card sm:p-6`}
-        >
-          <SectionHeader
-            icon={Bell}
-            title="Thông báo hệ thống"
-            description="Cấu hình email, thông báo đẩy và các kênh gửi thông báo."
-            tone="bg-amber-50 text-amber-600"
-          />
-
-          <div className="mt-6 grid gap-3">
-            <SettingSwitch
-              checked={notifications.email}
-              onChange={(email) =>
-                setNotifications({ ...notifications, email })
-              }
-              label="Email"
-              description="Gửi thông báo quan trọng đến email của người dùng."
-            />
-            <SettingSwitch
-              checked={notifications.push}
-              onChange={(push) => setNotifications({ ...notifications, push })}
-              label="Thông báo đẩy"
-              description="Hiển thị thông báo tức thời trên trình duyệt hoặc thiết bị."
-            />
-            <SettingSwitch
-              checked={notifications.inApp}
-              onChange={(inApp) =>
-                setNotifications({ ...notifications, inApp })
-              }
-              label="Thông báo trong hệ thống"
-              description="Lưu thông báo trong trung tâm thông báo của EStude."
-            />
-          </div>
-
-          <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2">
-            <Input
-              label="Email gửi đi"
-              value={notifications.sender}
-              onChange={(event) =>
-                setNotifications({
-                  ...notifications,
-                  sender: event.target.value,
-                })
-              }
-              icon={Mail}
-            />
-            <Input
-              label="Email nhận phản hồi"
-              value={notifications.replyTo}
-              onChange={(event) =>
-                setNotifications({
-                  ...notifications,
-                  replyTo: event.target.value,
-                })
-              }
-              icon={Mail}
-            />
-          </div>
-        </section>
-
         {section === "performance" ? <ReportPolicyPanel /> : null}
 
         <section

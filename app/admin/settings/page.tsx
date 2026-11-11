@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
-  return redirect("/admin/settings/attendance");
+  return redirect("/admin/settings/security");
 }

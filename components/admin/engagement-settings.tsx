@@ -1,25 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "@/components/ui/portal-link";
 import { notificationService } from "@/lib/engagement-api";
 import { Button } from "@/components/ui/button";
 import { Select, Input, Textarea } from "@/components/ui/form-control";
 
-
-export function AttendancePolicyPanel() {
-  return <section className="mx-auto max-w-4xl space-y-4 rounded-2xl border bg-white p-6">
-    <h1 className="text-2xl font-bold">Quản lý điểm danh</h1>
-    <p>Ngày học dùng múi giờ Asia/Ho_Chi_Minh. Giáo viên được phân công quản lý từng buổi trong trang Điểm danh.</p>
-    <ul className="list-disc space-y-2 pl-5 text-sm">
-      <li>Danh sách học sinh được chốt khi tạo buổi; thay đổi ghi danh không làm mất lịch sử.</li>
-      <li>Phải điểm danh đủ học sinh trước khi chốt. Mở lại và sửa sau chốt cần lý do, được lưu vào nhật ký.</li>
-      <li>Dữ liệu thay đổi ở tab khác yêu cầu tải lại trước khi lưu.</li>
-      <li>Không thể hoàn thành hoặc khóa học kỳ khi còn buổi chưa chốt. Học kỳ đã khóa không nhận chỉnh sửa.</li>
-    </ul>
-    <Link className="inline-block text-blue-700 underline" href="/admin/course-offerings">Quản lý phân công giáo viên</Link>
-  </section>;
-}
 
 export function SystemNotificationComposer() {
   const [targetRole, setRole] = useState("");
