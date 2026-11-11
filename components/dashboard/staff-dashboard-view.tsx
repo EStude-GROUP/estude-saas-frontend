@@ -716,6 +716,7 @@ export function StaffDashboardView() {
               isAccountsPage ||
               isUsersPage ||
               isSubjectsPage ||
+              isAcademicDataPage ||
               isOnlineSessionsPage ||
               isCourseOfferingsPage ||
               isClassesPage ||
