@@ -230,7 +230,7 @@ export function AcademicDataPanel() {
     <div className="pb-4">
       {error && <div role="alert" className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void load()}>Thử lại</Button></div>}
       {success && <div role="status" className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"><CheckCircle2 className="size-4" />{success}</div>}
-      <div className="grid items-start gap-3 xl:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="grid items-start gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card" aria-label="Danh sách năm học">
           <div className="mb-3 flex items-center justify-between gap-2"><div className="flex items-center gap-1"><h2 className="font-extrabold text-slate-900">Năm học</h2><InfoTooltip label="Thông tin năm học" content="Chọn năm học để xem học kỳ tương ứng. Năm đã hoàn tất chỉ dùng để tra cứu lịch sử." /></div><Button permission="academic.create" variant="secondary" size="sm" aria-label="Thêm năm học" onClick={addYear}><Plus className="size-4" /></Button></div>
           {loading ? <div className="flex items-center gap-2 py-8 text-sm text-slate-500"><LoaderCircle className="size-4 animate-spin" />Đang tải năm học…</div> : !years.length ? <p className="py-6 text-sm text-slate-500">Chưa có năm học. Thêm niên khóa đầu tiên để bắt đầu.</p> : (
