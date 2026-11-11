@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { authenticatedRequest } from "@/lib/auth-api";
 import type { StudentOverview } from "@/types/student-overview";
 import { Button } from "@/components/ui/button";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 
 export function LearningSummary({ report }: { report: StudentOverview }) {
@@ -22,11 +23,10 @@ export function LearningSummary({ report }: { report: StudentOverview }) {
       aria-label="Tổng quan kết quả học tập"
       className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5"
     >
-      <h2 className="font-bold">Kết quả học tập đã công bố</h2>
-      <p className="text-xs text-slate-500">
-        Trung bình đánh giá thường xuyên; bài chưa chấm hoặc chưa công bố không
-        tính điểm 0. Đây là chỉ báo hỗ trợ, không thay thế sổ điểm học kỳ.
-      </p>
+      <div className="flex items-center gap-1">
+        <h2 className="font-bold">Kết quả học tập</h2>
+        <InfoTooltip label="Cách tính kết quả học tập" content="Trung bình đánh giá thường xuyên đã công bố. Bài chưa chấm hoặc chưa công bố không tính điểm 0. Đây là chỉ báo hỗ trợ, không thay thế sổ điểm học kỳ." />
+      </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {values.map(([label, value]) => (
           <div key={label} className="rounded-xl bg-slate-50 p-4">
@@ -63,8 +63,9 @@ export function LearningSummary({ report }: { report: StudentOverview }) {
                     .find((s) => s.id === v.subjectId)?.name ?? "Môn học"}
                 </p>
                 <p className="text-slate-500">
-                  {v.completedLessons}/{v.requiredLessons} bài học bắt buộc ·{" "}
-                  {v.requiredLessons ? `${v.percent}%` : "Chưa có yêu cầu"}
+                  {v.requiredLessons
+                    ? `${v.completedLessons}/${v.requiredLessons} bài bắt buộc · ${v.percent}%`
+                    : "Chưa có yêu cầu"}
                 </p>
               </li>
             ))}

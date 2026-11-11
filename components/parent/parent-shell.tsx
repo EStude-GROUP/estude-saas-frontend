@@ -11,7 +11,6 @@ import {
   ChevronRight,
   ClipboardCheck,
   GraduationCap,
-  HeartHandshake,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
@@ -33,7 +32,7 @@ export type ParentSection =
   "overview" | "grades" | "attendance" | "exams" | "notifications";
 export const parentSections = [
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
-  { id: "grades", label: "Sổ điểm học sinh", icon: BarChart3 },
+  { id: "grades", label: "Sổ điểm", icon: BarChart3 },
   { id: "attendance", label: "Điểm danh", icon: ClipboardCheck },
   { id: "exams", label: "Lịch kiểm tra", icon: CalendarDays },
   { id: "notifications", label: "Thông báo", icon: Bell },
@@ -298,11 +297,6 @@ export function ParentShell({
           aria-label="Điều hướng phụ huynh"
           className="-mr-2 mt-8 min-h-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto overscroll-contain pr-2"
         >
-          <p
-            className={`mb-3 px-3.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 ${collapsed ? "lg:hidden" : ""}`}
-          >
-            Thông tin học sinh
-          </p>
           {canSwitchStudent ? <Button variant="plain" type="button" aria-label="Đổi con" aria-haspopup="dialog"
             title={collapsed ? student?.fullName ?? "Chọn con" : undefined}
             onClick={() => { setMobileOpen(false); onChooseStudent(); }}
@@ -334,15 +328,6 @@ export function ParentShell({
               </Button>
             ))}
         </nav>
-        <div
-          className={`mt-4 shrink-0 rounded-xl bg-brand-50 p-4 ${collapsed ? "lg:hidden" : ""}`}
-        >
-          <HeartHandshake className="mb-2 size-5 text-brand-600" />
-          <p className="text-xs font-bold text-ink">Đồng hành cùng con</p>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
-            Kết nối với nhà trường, theo dõi từng bước tiến bộ của con.
-          </p>
-        </div>
         <Button variant="plain"
           type="button"
           aria-label={

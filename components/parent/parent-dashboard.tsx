@@ -120,16 +120,8 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
   const title = !studentId
     ? "Tổng quan"
     : section === "overview"
-      ? `Tổng quan học tập của ${selectedStudent?.fullName ?? "học sinh"}`
+      ? "Tổng quan học tập"
       : parentSections.find((item) => item.id === section)?.label;
-  const descriptions: Record<ParentSection, string> = {
-    overview: "Cùng con theo dõi việc học, kết nối với thầy cô mỗi ngày.",
-    grades: "Theo dõi kết quả đã công bố theo môn học và học kỳ.",
-    attendance: "Các lượt điểm danh gần đây của học sinh đang xem.",
-    exams: "Chủ động sắp xếp thời gian để cùng con chuẩn bị cho bài kiểm tra.",
-    notifications:
-      "Thông tin từ nhà trường và những nội dung cần gia đình phối hợp.",
-  };
   return (
     <ParentShell
       section={section}
@@ -139,15 +131,10 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
       canSwitchStudent={children.length > 1}
       onChooseStudent={() => setPickerOpen(true)}
     >
-      {studentId && selectedStudent ? <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
-            {title}
-          </h2>
-          <p className="mt-1 text-[13px] leading-6 text-slate-500">
-            {descriptions[section]}
-          </p>
-        </div>
+      {studentId && selectedStudent ? <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">
+          {title}
+        </h2>
         <Button variant="plain"
           type="button"
           disabled={refreshing || loadingChildren}
@@ -177,9 +164,8 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
         <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {[
             {
-              label: "Sổ điểm học sinh",
-              value: "Xem điểm",
-              detail: "Kết quả theo môn và học kỳ",
+              label: "Sổ điểm",
+              value: "Sổ điểm",
               icon: BarChart3,
               tone: "bg-brand-50 text-brand-600",
               target: "grades" as const,
@@ -187,7 +173,6 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
             {
               label: "Lịch kiểm tra",
               value: overview?.upcomingExams.length ?? "—",
-              detail: "Bài kiểm tra sắp diễn ra",
               icon: CalendarDays,
               tone: "bg-violet-50 text-violet-600",
               target: "exams" as const,
@@ -195,7 +180,6 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
             {
               label: "Thông báo chưa đọc",
               value: overview ? unread : "—",
-              detail: "Từ giáo viên và nhà trường",
               icon: Bell,
               tone: "bg-emerald-50 text-emerald-600",
               target: "notifications" as const,
@@ -203,19 +187,18 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
             {
               label: "Cần phối hợp",
               value: overview ? alerts.length : "—",
-              detail: "Nội dung hỗ trợ học tập",
               icon: CircleAlert,
               tone: "bg-amber-50 text-amber-600",
               target: "notifications" as const,
             },
-          ].map(({ label, value, detail, icon: Icon, tone, target }) => (
+          ].map(({ label, value, icon: Icon, tone, target }) => (
             <Button variant="plain"
               key={label}
               type="button"
               onClick={() => navigate(target)}
-              className="group rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-brand-200 hover:shadow-md"
+              className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-brand-200 hover:shadow-md"
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex w-full items-center justify-between gap-2">
                 <span
                   className={`grid size-9 place-items-center rounded-xl ${tone}`}
                 >
@@ -226,12 +209,9 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
               <p className="mt-3 text-2xl font-bold leading-none text-ink">
                 {value}
               </p>
-              <p className="mt-2 text-xs font-semibold text-slate-600">
+              {target !== "grades" ? <p className="mt-2 text-xs font-semibold text-slate-600">
                 {label}
-              </p>
-              <p className="mt-1 hidden text-[11px] text-slate-400 sm:block">
-                {detail}
-              </p>
+              </p> : null}
             </Button>
           ))}
         </div>
@@ -271,21 +251,10 @@ export function ParentDashboard({ studentId }: { studentId?: string }) {
       {studentId && selectedStudent && !childrenError ? (
         section === "grades" ? (
           selectedStudent && !loadingChildren && !childrenError ? (
-            <div>
-              <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
-                <BarChart3 className="size-4" />
-                <span>
-                  Sổ điểm của{" "}
-                  <strong className="text-ink">
-                    {selectedStudent.fullName}
-                  </strong>
-                </span>
-              </div>
               <GradeReports
                 key={`${selectedStudent.id}:${childrenRefresh}`}
                 studentId={selectedStudent.id}
               />
-            </div>
           ) : null
         ) : (
           <ParentOverviewPanels

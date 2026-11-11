@@ -209,11 +209,8 @@ export function ParentOverviewPanels({
             <CircleAlert className="size-[18px] shrink-0 text-amber-600" />
             <div>
               <h2 className="text-sm font-bold text-ink">
-                Cần phối hợp hỗ trợ học tập
+                Cần phối hợp
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Nhận xét giáo viên gửi riêng tới gia đình
-              </p>
             </div>
             <span className="ml-auto rounded-md bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
               {learningAlerts.length}
@@ -245,7 +242,6 @@ export function ParentOverviewPanels({
       {summary || section === "exams" ? (
         <Panel
           title="Lịch kiểm tra sắp tới"
-          description="Lịch kiểm tra của học sinh đang xem"
           icon={CalendarClock}
           count={exams.length}
           wide={summary}
@@ -294,7 +290,6 @@ export function ParentOverviewPanels({
             <Empty
               icon={CalendarClock}
               title="Chưa có lịch kiểm tra mới"
-              text="Lịch kiểm tra sẽ xuất hiện khi giáo viên công bố."
             />
           )}
         </Panel>
@@ -303,7 +298,6 @@ export function ParentOverviewPanels({
       {showNotifications ? (
         <Panel
           title="Thông báo từ nhà trường"
-          description="Cập nhật từ giáo viên và nhà trường"
           icon={BellRing}
           count={notifications.length}
           action={
@@ -374,7 +368,6 @@ export function ParentOverviewPanels({
             <Empty
               icon={Inbox}
               title="Chưa có thông báo"
-              text="Thông tin mới từ thầy cô sẽ được cập nhật tại đây."
             />
           )}
         </Panel>
@@ -383,7 +376,6 @@ export function ParentOverviewPanels({
       {summary || section === "attendance" ? (
         <Panel
           title="Điểm danh gần đây"
-          description="Theo dõi việc tham gia các buổi học của con"
           icon={Check}
           count={attendance.length}
           action={
@@ -452,7 +444,6 @@ export function ParentOverviewPanels({
             <Empty
               icon={Check}
               title="Chưa có dữ liệu điểm danh"
-              text="Kết quả sẽ hiển thị sau khi giáo viên ghi nhận buổi học."
             />
           )}
         </Panel>
@@ -463,7 +454,6 @@ export function ParentOverviewPanels({
 
 function Panel({
   title,
-  description,
   icon: Icon,
   count,
   action,
@@ -471,7 +461,6 @@ function Panel({
   children,
 }: {
   title: string;
-  description: string;
   icon: typeof BellRing;
   count: number;
   action?: () => void;
@@ -493,7 +482,6 @@ function Panel({
               {count}
             </span>
           </h2>
-          <p className="mt-0.5 text-[11px] text-slate-400">{description}</p>
         </div>
         {action ? (
           <Button variant="plain"
@@ -514,21 +502,16 @@ function Panel({
 function Empty({
   icon: Icon,
   title,
-  text,
 }: {
   icon: typeof BellRing;
   title: string;
-  text: string;
 }) {
   return (
-    <div className="flex min-h-36 flex-col items-center justify-center rounded-xl bg-slate-50/60 px-4 py-6 text-center">
+    <div className="flex min-h-24 flex-col items-center justify-center rounded-xl bg-slate-50/60 px-4 py-4 text-center">
       <span className="mb-3 grid size-10 place-items-center rounded-full bg-white text-slate-300 ring-1 ring-slate-100">
         <Icon className="size-5" />
       </span>
       <p className="text-xs font-semibold text-slate-500">{title}</p>
-      <p className="mt-1 max-w-xs text-[11px] leading-5 text-slate-400">
-        {text}
-      </p>
     </div>
   );
 }
