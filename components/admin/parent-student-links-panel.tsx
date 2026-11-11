@@ -262,15 +262,6 @@ export function ParentStudentLinksPanel() {
     }
   }
 
-  function resetFilters() {
-    setSearch("");
-    setSubmittedSearch("");
-    setStatusFilter("");
-    setClassFilter("");
-    setLinkedDateRange({ from: "", to: "" });
-    setPage(1);
-  }
-
   return (
     <div className="w-full">
       <section className="overflow-visible rounded-lg border border-slate-200 bg-white shadow-card">
@@ -284,7 +275,6 @@ export function ParentStudentLinksPanel() {
               setPage(1);
             }}
             placeholder="Tìm phụ huynh hoặc học sinh"
-            containerClassName="sm:max-w-80"
               />}
  filters={[
  defineToolbarFilter({ id: "status", label: "Trạng thái", width: 208, active: Boolean(statusFilter), value: String(statusFilter), defaultValue: "", onChange: (value) => { setStatusFilter(value); setPage(1); }, render: (value, onChange) => (<CustomSelect className="w-full sm:w-52" value={value} onValueChange={onChange} options={[{ value: "", label: "Tất cả trạng thái" }, { value: "ACTIVE", label: "Đang hiệu lực" }, { value: "PENDING", label: "Chờ duyệt" }, { value: "REJECTED", label: "Từ chối" }, { value: "REVOKED", label: "Đã hủy" }]} ariaLabel="Lọc theo trạng thái" />) }),
@@ -312,9 +302,10 @@ export function ParentStudentLinksPanel() {
           </p>
         ) : null}
         <TableScrollArea>
-          <Table className="min-w-[880px]">
+          <Table className="min-w-[940px]">
             <TableHeader className="!bg-brand-600 !text-white">
               <tr>
+                <TableHead className="w-14 text-center">STT</TableHead>
                 <TableHead>Phụ huynh</TableHead>
                 <TableHead>Học sinh</TableHead>
                 <TableHead>Lớp học</TableHead>
@@ -324,13 +315,14 @@ export function ParentStudentLinksPanel() {
               </tr>
             </TableHeader>
             <TableBody>
-              {loading ? <TableLoadingBarRow colSpan={6} /> : null}
+              {loading ? <TableLoadingBarRow colSpan={7} /> : null}
               {!loading && !links.length ? (
-                <TableEmptyRow colSpan={6} message="Chưa có liên kết phù hợp." />
+                <TableEmptyRow colSpan={7} message="Chưa có liên kết phù hợp." />
               ) : null}
               {!loading
-                ? links.map((link) => (
+                ? links.map((link, index) => (
                     <tr key={link.id} className="transition hover:bg-slate-50/70">
+                      <TableCell className="text-center text-slate-400">{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell>
                         <p className="font-bold text-slate-900">{link.parent.fullName}</p>
                         <p className="mt-0.5 text-xs text-slate-500">{link.parent.accountName} · {relationshipLabels[link.relationshipType]}</p>

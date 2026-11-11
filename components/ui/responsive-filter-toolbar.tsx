@@ -182,7 +182,7 @@ export function ResponsiveFilterToolbar({ search, filters, actions, applyDisable
   return (
     <div data-filter-toolbar className={cn("flex min-w-0 flex-wrap items-center gap-3", className)}>
       <div ref={controlsRef} data-filter-controls className={cn("flex min-w-0 flex-1 items-center gap-3", filters.length < 2 ? "flex-wrap" : "flex-nowrap")} style={{ flexBasis: search ? "min(100%, 300px)" : "min(100%, 160px)" }}>
-        {search ? <div ref={searchRef} data-filter-search className="min-w-0 max-w-[var(--search-input-max-width)] flex-[1_1_160px]">{search}</div> : null}
+        {search ? <div ref={searchRef} data-filter-search className="min-w-0 max-w-[var(--search-input-max-width)] flex-[1_1_160px] [&>*]:!w-full [&>*]:!max-w-none">{search}</div> : null}
         {filters.slice(0, visible).map((filter) => (
           <div key={filter.id} data-inline-filter={filter.id} className="max-w-full shrink-0 [&>*]:!w-full [&>*]:!max-w-none" style={{ width: filter.width ?? 192 }}>{filter.render(filter.value, filter.apply, { inPopup: false, values: appliedValues, setValue: (filterId, value) => filters.find((item) => item.id === filterId)?.apply(value) })}</div>
         ))}
