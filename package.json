@@ -30,7 +30,7 @@
     "test:content": "node --test tests/content.test.cjs",
     "test:assignment": "node --test tests/assignment.test.cjs",
     "test:gradebook": "node --test tests/gradebook.test.cjs",
-    "test:parent": "node --test tests/parent-child-navigation.test.cjs tests/parent-learning-alerts.test.cjs",
+    "test:parent": "node --test tests/parent-child-navigation.test.cjs tests/parent-learning-alerts.test.cjs tests/parent-attendance.test.cjs",
     "test:ai-questions": "node --test tests/ai-question-bulk-approve.test.cjs tests/unsaved-question-changes.test.cjs",
     "test:assessment-report": "node --test tests/exam-class-report.test.cjs tests/exam-results-overview.test.cjs tests/exam-submissions-panel.test.cjs tests/exam-analysis-page.test.cjs tests/subject-support.test.cjs tests/parent-learning-alerts.test.cjs",
     "test:study-evidence": "node --test tests/study-evidence.test.cjs tests/study-evidence-api.test.cjs tests/study-evidence-panels.test.cjs",

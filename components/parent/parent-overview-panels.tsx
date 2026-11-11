@@ -26,7 +26,9 @@ import { toVietnameseSubjectName } from "@/lib/subject-localization";
 import type { ParentOverview } from "@/types/engagement";
 import type { ParentSection } from "./parent-shell";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/form-control";
+import { ParentAttendancePanel } from "@/components/parent/parent-attendance-panel";
+import { ParentExamCalendarPanel } from "@/components/parent/parent-exam-calendar-panel";
+import { parentExamRows } from "@/lib/parent-exams";
 
 
 export function useParentOverview(enabled = true, studentId?: string) {
@@ -123,7 +125,6 @@ export function ParentOverviewPanels({
   const [readIds, setReadIds] = useState<string[]>([]);
   const [savingId, setSavingId] = useState("");
   const [actionError, setActionError] = useState("");
-  const [studentFilter, setStudentFilter] = useState("all");
   async function markRead(id: string) {
     setSavingId(id);
     setActionError("");
@@ -169,21 +170,10 @@ export function ParentOverviewPanels({
   const notifications = overview.notifications.filter(
     (item) => !learningAlerts.some((alert) => alert.id === item.id),
   );
-  const students = Array.from(
-    new Map(
-      overview.attendance.map((item) => [item.studentId, item.studentName]),
-    ).entries(),
-  );
-  const attendance = overview.attendance.filter(
-    (item) =>
-      summary || studentFilter === "all" || item.studentId === studentFilter,
-  );
-  const exams = [...overview.upcomingExams].sort(
-    (a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt),
-  );
+  const exams = parentExamRows(overview);
   const showNotifications = summary || section === "notifications";
   return (
-    <div className={`grid gap-4 ${summary ? "xl:grid-cols-2" : ""}`}>
+    <div className={`grid grid-cols-1 gap-4 ${summary ? "xl:grid-cols-2" : ""}`}>
       {error ? (
         <p
           role="alert"
@@ -239,7 +229,7 @@ export function ParentOverviewPanels({
         </section>
       ) : null}
 
-      {summary || section === "exams" ? (
+      {summary ? (
         <Panel
           title="Lịch kiểm tra sắp tới"
           icon={CalendarClock}
@@ -283,6 +273,7 @@ export function ParentOverviewPanels({
                       {exam.className}
                     </span>
                   </div>
+                  <p className="mt-2 text-[13px] text-slate-500">{[exam.termName, exam.academicYearName].filter(Boolean).join(" · ")}</p>
                 </article>
               ))}
             </div>
@@ -293,7 +284,7 @@ export function ParentOverviewPanels({
             />
           )}
         </Panel>
-      ) : null}
+      ) : section === "exams" ? <ParentExamCalendarPanel overview={overview} /> : null}
 
       {showNotifications ? (
         <Panel
@@ -373,81 +364,12 @@ export function ParentOverviewPanels({
         </Panel>
       ) : null}
 
-      {summary || section === "attendance" ? (
-        <Panel
-          title="Điểm danh gần đây"
-          icon={Check}
-          count={attendance.length}
-          action={
-            summary && onNavigate ? () => onNavigate("attendance") : undefined
-          }
-        >
-          {!summary && students.length > 1 ? (
-            <label className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-              Học sinh
-              <Select
-                aria-label="Lọc điểm danh theo học sinh"
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-                value={studentFilter}
-                onChange={(event) => setStudentFilter(event.target.value)}
-              >
-                <option value="all">Tất cả học sinh</option>
-                {students.map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-          ) : null}
-          {attendance.length ? (
-            <div className="divide-y divide-slate-100">
-              {(summary ? attendance.slice(0, 5) : attendance).map((item) => (
-                <article
-                  key={item.id}
-                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-50 text-xs font-bold text-slate-500">
-                    {item.studentName
-                      .trim()
-                      .split(/\s+/)
-                      .slice(-2)
-                      .map((word) => word[0])
-                      .join("")}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold text-slate-800">
-                      {item.studentName}
-                    </p>
-                    <p className="mt-1 truncate text-[11px] text-slate-400">
-                      {new Date(item.sessionDate).toLocaleDateString("vi-VN", { timeZone: "UTC" })}
-                      {item.subject?.name
-                        ? ` · ${toVietnameseSubjectName(item.subject.name)}`
-                        : ""}
-                      {item.class?.code ? ` · ${item.class.code}` : ""}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold ${item.status === "PRESENT" ? "bg-emerald-50 text-emerald-700" : item.status === "ABSENT" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
-                  >
-                    {item.status === "PRESENT" ? (
-                      <Check className="size-3" />
-                    ) : (
-                      <CircleAlert className="size-3" />
-                    )}
-                    {({ PRESENT: "Có mặt", ABSENT: "Vắng", LATE: "Đi muộn", EXCUSED: "Vắng có phép", LEAVE: "Nghỉ phép", NOT_MARKED: "Chưa điểm danh", UNDER_REVIEW: "Đang rà soát" } as Record<string, string>)[item.status] ?? item.status}
-                  </span>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <Empty
-              icon={Check}
-              title="Chưa có dữ liệu điểm danh"
-            />
-          )}
+      {summary ? (
+        <Panel title="Điểm danh gần đây" icon={Check} count={overview.attendance.length}
+          action={onNavigate ? () => onNavigate("attendance") : undefined}>
+          <ParentAttendancePanel overview={overview} compact />
         </Panel>
-      ) : null}
+      ) : section === "attendance" ? <ParentAttendancePanel overview={overview} /> : null}
     </div>
   );
 }

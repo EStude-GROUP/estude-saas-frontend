@@ -135,6 +135,7 @@ export interface ParentOverview {
     subjectName: string;
     classId: string;
     className: string;
+    studentId?: string;
     startsAt: string;
     endsAt: string;
   }>;

@@ -58,10 +58,13 @@ test("parent attendance filtering keeps students separate and sections show thei
   let renderer;
   await act(async () => { renderer = create(React.createElement(Panels, { overview, section: "attendance" })); });
   t.after(async () => { await act(async () => renderer.unmount()); delete global.window; });
-  assert.equal(renderer.root.findAllByType("article").length, 2);
-  await act(async () => renderer.root.findByProps({ "aria-label": "Lọc điểm danh theo học sinh" }).props.onChange({ target: { value: "binh" } }));
-  assert.equal(renderer.root.findAllByType("article").length, 1);
-  assert.ok(renderer.root.findByType("article").findAllByType("p").some((paragraph) => paragraph.children.includes("Trần Bình")));
+  assert.equal(renderer.root.findByType("tbody").findAllByType("tr").length, 2);
+  const { ResponsiveFilterToolbar } = require("../components/ui/responsive-filter-toolbar.tsx");
+  await act(async () => renderer.root.findByType(ResponsiveFilterToolbar).props.filters.find((filter) => filter.id === "student").apply("binh"));
+  assert.equal(renderer.root.findByType("tbody").findAllByType("tr").length, 1);
+  const text = (node) => typeof node === "string" ? node : node.children.map(text).join(" ");
+  assert.match(text(renderer.root.findByType("tbody")), /Trần Bình/);
+  assert.doesNotMatch(text(renderer.root.findByType("tbody")), /Nguyễn An/);
   await act(async () => renderer.update(React.createElement(Panels, { overview, section: "exams" })));
   assert.match(JSON.stringify(renderer.toJSON()), /Kiểm tra Toán/);
   assert.doesNotMatch(JSON.stringify(renderer.toJSON()), /Nguyễn An/);
