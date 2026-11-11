@@ -13,7 +13,6 @@
 @layer components {
   .data-table-scroll {
     max-height: var(--table-max-height);
-    scrollbar-gutter: stable;
   }
 
   [role="dialog"] .data-table-scroll {
