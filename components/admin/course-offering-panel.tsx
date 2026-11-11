@@ -14,6 +14,7 @@ import { DataTableFooter } from "@/components/ui/data-table-footer";
 import { matchesSearchKeyword, normalizeSearchKeyword } from "@/lib/search-keyword";
 import { academicDataService } from "@/lib/assessment-api";
 import { ApiError } from "@/lib/auth-api";
+import { courseCalendarFilters } from "@/lib/academic-calendar";
 import { courseOfferingApi, type CourseMembers, type CourseOffering, type CourseTeacherRole } from "@/lib/course-offering-api";
 import type { AcademicYear, ClassRoster, SchoolClass, Subject, Term } from "@/types/assessment";
 import { loadAccountDirectory } from "@/lib/account-directory";
@@ -122,7 +123,11 @@ export function CourseOfferingPanel() {
     closeFilters();
   }
 
-  useEffect(() => { setClassFilter(new URLSearchParams(window.location.search).get("classId") ?? ""); }, []);
+  useEffect(() => {
+    const filters = courseCalendarFilters(window.location.search);
+    setClassFilter(filters.classId); setYearFilter(filters.yearId);
+    setTermFilter(filters.termId); setStatusFilter(filters.status);
+  }, []);
 
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
