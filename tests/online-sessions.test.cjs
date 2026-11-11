@@ -5,6 +5,7 @@ const ts = require("typescript"); const React = require("react"); const {create,
 global.IS_REACT_ACT_ENVIRONMENT=true;
 function load(file,mocks={}) {const filename=path.resolve(file);const mod=new Module(filename,module);mod.filename=filename;mod.paths=Module._nodeModulePaths(path.dirname(filename));const original=mod.require.bind(mod);mod.require=(id)=>Object.hasOwn(mocks,id)?mocks[id]:original(id);mod._compile(ts.transpileModule(fs.readFileSync(filename,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,filename);return mod.exports;}
 const view = load("lib/online-session-view.ts");
+const tableUI = load("components/ui/data-table.tsx", { "@/lib/cn": { cn: (...values) => values.filter(Boolean).join(" ") } });
 async function setup(t,overrides={}) {
  const writes=[],saved=[],closed=[];
  const {OnlineSessionEditor}=load("components/online-sessions/session-editor.tsx",{
@@ -48,6 +49,10 @@ test("teacher with multiple courses can choose a course and open its session edi
  global.window={setInterval:()=>1,clearInterval(){},addEventListener(){},removeEventListener(){}};
  const calls=[];
  const {OnlineSessionPanel}=load("components/online-sessions/session-panel.tsx",{
+  "@/components/ui/data-table": tableUI,
+  "@/components/ui/table-scroll-area": { TableScrollArea: ({children, ...props}) => React.createElement("div", props, children) },
+  "@/components/ui/data-table-footer": { DataTableFooter: () => null },
+  "@/components/ui/info-tooltip": { InfoTooltip: () => null },
   "@/components/ui/responsive-filter-toolbar":{defineToolbarFilter:require("./helpers/filter-toolbar.cjs").defineToolbarFilter,ResponsiveFilterToolbar:require("./helpers/filter-toolbar.cjs").filterToolbar()},
   "@/components/ui/button":{Button:({children,...props})=>React.createElement("button",props,children)},
   "@/components/ui/modal":{Modal:()=>null},
@@ -100,6 +105,10 @@ test("student sees a passcode only after joining and a denied retry removes it",
  const now=new Date().toISOString();let denied=false;
  const row={id:"meeting",revision:3,courseOfferingId:"course",title:"Zoom hỗ trợ",courseName:"Toán · 12A2",platform:"ZOOM",status:"SCHEDULED",audience:"ALL",startsAt:now,joinOpensAt:new Date(Date.now()-60000).toISOString(),endsAt:new Date(Date.now()+3600000).toISOString(),serverNow:now};
  const {OnlineSessionPanel}=load("components/online-sessions/session-panel.tsx",{
+  "@/components/ui/data-table": tableUI,
+  "@/components/ui/table-scroll-area": { TableScrollArea: ({children, ...props}) => React.createElement("div", props, children) },
+  "@/components/ui/data-table-footer": { DataTableFooter: () => null },
+  "@/components/ui/info-tooltip": { InfoTooltip: () => null },
   "@/components/ui/responsive-filter-toolbar":{defineToolbarFilter:require("./helpers/filter-toolbar.cjs").defineToolbarFilter,ResponsiveFilterToolbar:require("./helpers/filter-toolbar.cjs").filterToolbar()},
   "@/components/ui/button":{Button:({children,...p})=>React.createElement("button",p,children)},
   "@/components/ui/modal":{Modal:()=>null},
