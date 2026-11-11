@@ -391,7 +391,7 @@ export function QuestionBankPage() {
     <AssessmentShell>
       <PageHeading title="Ngân hàng câu hỏi" />
 
-      <div className="flex h-[calc(100dvh-86px)] min-h-0 w-full flex-col overflow-hidden">
+      <div className="flex max-h-[calc(100dvh-86px)] min-h-0 w-full flex-col overflow-hidden">
         <section className="shrink-0 rounded-lg border border-slate-200 bg-white p-2.5 shadow-card">
           <div className="flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-center">
             <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">

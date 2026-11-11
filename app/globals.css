@@ -5,20 +5,19 @@
 :root {
   --background: #fafafa;
   --foreground: #12233f;
-  --table-visible-rows: 12;
+  --table-max-height: 720px;
   --table-row-height: 3rem;
   --table-header-height: 3rem;
 }
 
 @layer components {
   .data-table-scroll {
-    height: calc(var(--table-header-height) + var(--table-visible-rows) * var(--table-row-height));
-    max-height: 70dvh;
+    max-height: var(--table-max-height);
     scrollbar-gutter: stable;
   }
 
   [role="dialog"] .data-table-scroll {
-    max-height: 50dvh;
+    max-height: min(var(--table-max-height), 50dvh);
   }
 
   .data-table-scroll > table > tbody > tr:not([data-table-loading]) {
