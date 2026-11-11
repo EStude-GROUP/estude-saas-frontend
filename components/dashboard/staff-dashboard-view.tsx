@@ -207,11 +207,11 @@ export function StaffDashboardView() {
   if (!user) {
     return (
       <main
-        className="grid min-h-screen place-items-center bg-slate-950"
+        className="grid min-h-screen place-items-center bg-background"
         aria-live="polite"
       >
         <LoaderCircle
-          className="size-8 animate-spin text-cyan-400"
+          className="size-8 animate-spin text-brand-600"
           aria-hidden="true"
         />
       </main>
@@ -333,7 +333,7 @@ export function StaffDashboardView() {
 
   return (
     <ActionNotificationProvider>
-      <div className="min-h-screen bg-brand-50/50 text-slate-950">
+      <div className="min-h-screen bg-background text-slate-950">
         <header
           className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] duration-300 lg:pr-8 ${
             isSidebarCollapsed ? "lg:pl-[92px]" : "lg:pl-[286px]"
@@ -729,7 +729,7 @@ export function StaffDashboardView() {
               isTeacherMaterialsPage ||
               isTeacherClassDetailPage ||
               isTeacherStudentDetailPage
-                ? `w-full ${studentDetailId ? "bg-brand-50/50" : ""}`
+                ? `w-full ${studentDetailId ? "bg-background" : ""}`
                 : "mx-auto max-w-[1280px]"
             }
           >

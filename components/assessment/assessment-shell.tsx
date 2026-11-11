@@ -168,7 +168,7 @@ function AssessmentWorkspaceShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-slate-950">
+    <div className="min-h-screen bg-background text-slate-950">
       <header
         className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] lg:pr-8 ${isSidebarCollapsed ? "lg:pl-[92px]" : "lg:pl-[286px]"}`}
       >

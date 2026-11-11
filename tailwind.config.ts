@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         ink: "#12233f",
+        background: "var(--background)",
         brand: {
           50: "rgb(var(--brand-50, 238 247 255) / <alpha-value>)",
           100: "rgb(var(--brand-100, 217 236 255) / <alpha-value>)",
@@ -24,8 +25,8 @@ const config: Config = {
         },
       },
       boxShadow: {
-        soft: "0 24px 80px rgb(var(--brand-900, 24 58 112) / 0.14)",
-        card: "0 14px 40px rgb(var(--brand-900, 28 57 104) / 0.08)",
+        soft: "0 24px 80px rgb(15 23 42 / 0.10)",
+        card: "0 4px 16px rgb(15 23 42 / 0.04)",
       },
       animation: {
         float: "float 7s ease-in-out infinite",

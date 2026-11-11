@@ -89,7 +89,7 @@ function isNavItemActive(pathname: string, href?: string): boolean {
 function StudentShellLoading() {
   return (
     <main
-      className="grid min-h-screen place-items-center bg-[#f7fafc]"
+      className="grid min-h-screen place-items-center bg-background"
       aria-live="polite"
     >
       <div className="text-center">
@@ -208,7 +208,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] pb-20 text-slate-950 lg:pb-0">
+    <div className="min-h-screen bg-background pb-20 text-slate-950 lg:pb-0">
       <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-full max-w-[1480px] items-center gap-6 px-4 sm:px-6 lg:px-8">
           <BrandLogo withShadow={false} />

@@ -66,7 +66,7 @@ export function FirstLoginSetupForm({ modal = false }: { modal?: boolean }) {
       className={
         modal
           ? "fixed inset-0 z-[100] grid overflow-y-auto bg-slate-900/40 p-4 py-8"
-          : "grid min-h-screen place-items-center bg-slate-50 px-4 py-8"
+          : "grid min-h-screen place-items-center bg-background px-4 py-8"
       }
     >
       <section

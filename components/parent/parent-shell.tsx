@@ -141,7 +141,7 @@ export function ParentShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f9ff] text-slate-950">
+    <div className="min-h-screen bg-background text-slate-950">
       <header
         className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur transition-[padding] duration-300 sm:px-6 ${collapsed ? "lg:pl-[96px]" : "lg:pl-[290px]"}`}
       >

@@ -91,7 +91,7 @@ export function PasswordRecoveryPage({
     }
   }
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-50 px-4 py-10">
+    <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <section className="w-full max-w-[440px] rounded-3xl bg-white p-6 shadow-xl sm:p-8">
         <BrandLogo withShadow={false} />
         <h1 className="mt-6 text-center text-2xl font-extrabold text-brand-600">

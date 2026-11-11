@@ -27,7 +27,7 @@ const benefits = [
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-[#f2f7fc] p-0 lg:p-5">
+    <main className="min-h-screen bg-background p-0 lg:p-5">
       <div className="mx-auto grid min-h-screen max-w-[1500px] overflow-hidden bg-white shadow-soft lg:min-h-[calc(100vh-2.5rem)] lg:grid-cols-[minmax(420px,0.92fr)_minmax(540px,1.08fr)] lg:rounded-[32px]">
         <section className="relative hidden overflow-hidden bg-gradient-to-br from-[#123f9c] via-[#165fce] to-[#2d8df5] px-10 py-9 text-white lg:flex lg:flex-col xl:px-16 xl:py-12">
           <div

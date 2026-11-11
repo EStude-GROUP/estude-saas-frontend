@@ -116,14 +116,14 @@ export function SessionManagerView() {
 
   if (isInitializing || !user) {
     return (
-      <main className="grid min-h-screen place-items-center bg-slate-50">
+      <main className="grid min-h-screen place-items-center bg-background">
         <LoaderCircle className="size-8 animate-spin text-brand-600" aria-label="Đang tải" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 sm:px-6 lg:py-12">
+    <main className="min-h-screen bg-background px-4 py-8 text-slate-950 sm:px-6 lg:py-12">
       <div className="mx-auto max-w-4xl">
         <Button variant="plain"
           type="button"
