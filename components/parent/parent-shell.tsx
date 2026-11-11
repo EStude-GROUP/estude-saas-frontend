@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  GraduationCap,
   HeartHandshake,
   LayoutDashboard,
   LoaderCircle,
@@ -24,6 +25,8 @@ import { ProfileModal } from "@/components/auth/profile-modal";
 import { useAuth } from "@/context/auth-context";
 import { getRoleSessionSettings } from "@/lib/role-routes";
 import { Button } from "@/components/ui/button";
+import { ParentChildIdentity } from "@/components/parent/parent-child-picker";
+import type { User } from "@/types/auth";
 
 
 export type ParentSection =
@@ -40,15 +43,17 @@ export function ParentShell({
   section,
   onNavigate,
   unreadCount = 0,
-  childrenOnly = false,
-  studentName,
+  student,
+  canSwitchStudent = false,
+  onChooseStudent,
   children,
 }: {
   section: ParentSection;
   onNavigate: (section: ParentSection) => void;
   unreadCount?: number;
-  childrenOnly?: boolean;
-  studentName?: string;
+  student?: User;
+  canSwitchStudent?: boolean;
+  onChooseStudent: () => void;
   children: ReactNode;
 }) {
   const { user, signOut } = useAuth();
@@ -158,16 +163,14 @@ export function ParentShell({
         </Button>
         <div className="min-w-0">
           <p className="hidden text-[11px] font-medium text-slate-400 sm:block">
-            {studentName ?? "Cổng phụ huynh"}
+            {student?.fullName ?? "Cổng phụ huynh"}
           </p>
           <h1 className="truncate text-base font-bold text-brand-700">
-            {childrenOnly
-              ? "Chọn học sinh"
-              : parentSections.find((item) => item.id === section)?.label}
+            {parentSections.find((item) => item.id === section)?.label}
           </h1>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-3">
-          {!childrenOnly ? (
+          {student ? (
             <Button variant="plain"
               type="button"
               aria-label={
@@ -298,30 +301,24 @@ export function ParentShell({
           <p
             className={`mb-3 px-3.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 ${collapsed ? "lg:hidden" : ""}`}
           >
-            {childrenOnly ? "Không gian gia đình" : "Thông tin học sinh"}
+            Thông tin học sinh
           </p>
-          <Button variant="plain"
-            type="button"
-            onClick={() => {
-              router.push("/parent/dashboard");
-              setMobileOpen(false);
-            }}
-            title="Chọn học sinh"
-            aria-current={childrenOnly ? "page" : undefined}
-            className={`mb-3 flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[13px] font-semibold ${childrenOnly ? "bg-brand-600 text-white" : "border border-slate-200 text-slate-500 hover:bg-slate-50"} ${collapsed ? "lg:justify-center lg:px-2" : ""}`}
-          >
-            <ChevronLeft className="size-5 shrink-0" />
-            <span className={collapsed ? "lg:hidden" : ""}>
-              {childrenOnly ? "Học sinh của bạn" : "Chọn học sinh khác"}
-            </span>
-          </Button>
-          {!childrenOnly &&
-            parentSections.map(({ id, label, icon: Icon }) => (
+          {canSwitchStudent ? <Button variant="plain" type="button" aria-label="Đổi con" aria-haspopup="dialog"
+            title={collapsed ? student?.fullName ?? "Chọn con" : undefined}
+            onClick={() => { setMobileOpen(false); onChooseStudent(); }}
+            className={`!mb-3 flex w-full min-w-0 items-center gap-2.5 rounded-xl border border-slate-200 p-3 text-left hover:border-brand-200 hover:bg-slate-50 ${collapsed ? "lg:justify-center lg:px-1" : ""}`}>
+            {student ? <ParentChildIdentity student={student} detailsClassName={collapsed ? "lg:hidden" : ""} /> : <><GraduationCap className="size-5 shrink-0 text-brand-600" /><span className={collapsed ? "lg:hidden" : ""}>Chọn con</span></>}
+            <ChevronDown className={`size-4 shrink-0 text-slate-400 ${collapsed ? "lg:hidden" : ""}`} />
+          </Button> : student ? <div className={`!mb-3 flex min-w-0 items-center gap-2.5 rounded-xl bg-slate-50 p-3 ${collapsed ? "lg:justify-center lg:px-1" : ""}`}>
+            <ParentChildIdentity student={student} detailsClassName={collapsed ? "lg:hidden" : ""} />
+          </div> : null}
+          {parentSections.map(({ id, label, icon: Icon }) => (
               <Button variant="plain"
                 key={id}
                 type="button"
                 aria-current={section === id ? "page" : undefined}
                 title={collapsed ? label : undefined}
+                disabled={!student}
                 onClick={() => navigate(id)}
                 className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[13px] font-semibold transition ${collapsed ? "lg:justify-center lg:px-2" : ""} ${section === id ? "bg-brand-600 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
               >
