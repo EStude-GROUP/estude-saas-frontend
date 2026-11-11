@@ -84,7 +84,7 @@ export function ExamSubmissionsPanel({ examId, totalPoints }: { examId: string; 
           </div>
           <div className="mt-2 flex min-h-0 shrink flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-card">
           <TableScrollArea className="min-h-0 shrink">
-            <Table className="min-w-[620px] [&_button]:!text-[13px] [&_p]:!text-[13px] [&_span]:!text-[13px]">
+            <Table className="min-w-[620px]">
               <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white"><tr><TableHead className="w-14 text-center">#</TableHead><TableHead>Học sinh</TableHead><TableHead>Thời gian nộp</TableHead><TableHead className="text-center">Điểm</TableHead><TableHead className="w-24 text-right">Thao tác</TableHead></tr></TableHeader>
               <TableBody>
                 {busy ? <TableLoadingBarRow colSpan={5} /> : rows.length === 0 ? (

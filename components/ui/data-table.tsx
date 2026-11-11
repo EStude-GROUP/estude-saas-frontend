@@ -15,7 +15,7 @@ export function Table({
   return (
     <table
       className={cn(
-        "w-full text-left text-[13px] text-slate-700 [&_td]:!text-[13px] [&_th]:!text-[13px]",
+        "data-table w-full text-left text-[14px] text-slate-700 [&_td]:!text-[14px] [&_th]:!text-[14px]",
         className,
       )}
       {...props}
@@ -30,7 +30,7 @@ export function TableHeader({
   return (
     <thead
       className={cn(
-        "sticky top-0 z-10 h-[var(--table-header-height)] bg-slate-50 text-[13px] uppercase tracking-wide text-slate-500",
+        "sticky top-0 z-10 h-[var(--table-header-height)] bg-slate-50 text-[14px] uppercase tracking-wide text-slate-500",
         className,
       )}
       {...props}
@@ -54,7 +54,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        "whitespace-nowrap px-4 py-2.5 !text-[13px] font-bold",
+        "whitespace-nowrap px-4 py-2.5 !text-[14px] font-bold",
         className,
       )}
       {...props}
@@ -68,7 +68,7 @@ export function TableCell({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn("px-4 py-2 !text-[13px] text-slate-700", className)}
+      className={cn("px-4 py-2 !text-[14px] text-slate-700", className)}
       {...props}
     />
   );

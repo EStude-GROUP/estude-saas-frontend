@@ -18,6 +18,11 @@
     max-width: var(--search-input-max-width);
   }
 
+  .data-table :is(.text-xs, [class~="text-[11px]"], [class~="text-[12px]"]) {
+    font-size: 13px;
+    line-height: 1.25rem;
+  }
+
   .data-table-scroll {
     max-height: var(--table-max-height);
   }

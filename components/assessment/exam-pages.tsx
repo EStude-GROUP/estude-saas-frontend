@@ -401,7 +401,7 @@ export function TeacherExamsPage() {
             </div>
           ) : null}
           <TableScrollArea className="min-h-0 shrink">
-          <Table className="min-w-[1280px] [&_button]:!text-[13px] [&_p]:!text-[13px] [&_span]:!text-[13px]">
+          <Table className="min-w-[1280px]">
             <TableHeader className="sticky top-0 z-10 !bg-brand-600 !text-white">
               <tr>
                 <TableHead className="w-14 text-center">#</TableHead>
@@ -446,7 +446,7 @@ export function TeacherExamsPage() {
                             event.stopPropagation();
                             router.push(`/teacher/exams/${exam.id}`);
                           }}
-                          className="!h-auto max-w-80 !justify-start !p-0 text-left font-bold text-slate-900 hover:!bg-transparent hover:text-brand-700 hover:underline"
+                          className="!h-auto max-w-80 !justify-start !p-0 text-left !text-sm font-bold text-slate-900 hover:!bg-transparent hover:text-brand-700 hover:underline"
                         >
                           {exam.title}
                         </Button>
