@@ -25,6 +25,13 @@ async function render(t, options = {}) {
   const loaded = new Module(filename, module); loaded.filename = filename; loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const original = loaded.require.bind(loaded);
   loaded.require = (id) => {
+    if (id === './ai-question-jobs-dialog') return {
+      aiQuestionJobStatus: (status) => ({ label: status === 'READY' ? 'Hoàn tất' : status === 'QUEUED' ? 'Đang chờ' : 'Đang tạo', color: '' }),
+      AiQuestionJobProgress: ({ job }) => React.createElement('progress', { value: job.completed, max: job.quantity }),
+      AiQuestionJobsDialog: ({ open, jobs, onOpen, onClose, onCreate }) => !open ? null : React.createElement('section', { 'data-job-dialog': true },
+        jobs.map((job) => React.createElement('button', { key: job.id, onClick: async () => { if (await onOpen(job.id)) onClose(); } }, `Mở ${job.id}`)),
+        React.createElement('button', { onClick: async () => { if (await onCreate()) onClose(); } }, 'Tạo từ danh sách')),
+    };
     if (id === './unsaved-question-changes') return { UnsavedQuestionChanges: ({ dirty }) => React.createElement('span', { 'data-unsaved-guard': dirty }) };
     if (id === 'next/link') return { default: ({ children, ...props }) => React.createElement('a', props, children) };
     if (id === 'lucide-react') return new Proxy({}, { get: () => () => React.createElement('svg') });
@@ -208,8 +215,8 @@ test('failed question updates retain the editor, and failed draft saves keep uns
 
 test('queues in the background and allows leaving without a draft save', async (t) => {
   const page = await render(t, { jobStatus: 'QUEUED' });
-  assert.match(page.text(), /Đang xử lý nền/);
-  assert.match(page.text(), /Bạn có thể rời trang hoặc đóng trình duyệt/);
+  assert.match(page.text(), /Đang chờ xử lý|Đang tạo câu hỏi/);
+  assert.match(page.text(), /Bạn có thể tạo bộ mới hoặc rời trang/);
   assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
   assert.equal(page.jobCalls.length, 1);
   assert.equal(page.button('Tạo câu hỏi').props.disabled, true);
@@ -247,13 +254,13 @@ test('restores a background job and renders its final result on the last poll', 
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const options = { generate: false, jobs: [savedJob('PROCESSING', 5)] };
   const page = await render(t, options);
-  assert.match(page.text(), /Đang xử lý nền/);
+  assert.match(page.text(), /Đang chờ xử lý|Đang tạo câu hỏi/);
   assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
   options.loadedJob = savedJob('READY', 200);
   options.jobs = [options.loadedJob];
   await act(async () => { t.mock.timers.tick(3000); await flush(); await flush(); });
   assert.match(page.text(), /Đã tạo xong/);
-  assert.equal(page.button('Tạo câu hỏi').props.disabled, false);
+  assert.equal(page.button('Tạo bộ mới').props.disabled, false);
   assert.equal(page.button('Duyệt tất cả').props.disabled, false);
 });
 
@@ -264,5 +271,52 @@ test('resumes only the missing part of a failed job', async (t) => {
   await act(async () => { page.button('Tiếp tục phần còn lại').props.onClick(); await flush(); });
   assert.deepEqual(page.jobCalls, [{ retry: 'saved-job' }]);
   assert.equal(page.renderer.root.findByType('progress').props.value, 5);
-  assert.match(page.text(), /Đang xử lý nền/);
+  assert.match(page.text(), /Đang chờ xử lý|Đang tạo câu hỏi/);
+});
+
+
+test('starts another job while a previous job runs and keeps the active job in the dialog', async (t) => {
+  const options = { generate: false, jobs: [savedJob('PROCESSING', 5)] };
+  const page = await render(t, options);
+  assert.equal(page.button('Tạo câu hỏi').props.disabled, true);
+  await act(async () => { await page.button('Tạo bộ mới').props.onClick(); await flush(); });
+  assert.equal(page.button('Tạo câu hỏi').props.disabled, false);
+  assert.equal(page.renderer.root.findAllByType('progress').length, 0);
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
+  await act(async () => { page.button('Tiến trình').props.onClick(); await flush(); });
+  assert.ok(page.button('Mở saved-job'));
+  await act(async () => { await page.button('Tạo từ danh sách').props.onClick(); await flush(); });
+  await act(async () => { page.renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }); await flush(); });
+  assert.equal(page.jobCalls.length, 1);
+  assert.equal(page.jobCalls[0].input.quantity, 200);
+});
+
+test('nullable server fields and catalog loading do not mark an auto-saved job dirty', async (t) => {
+  const job = savedJob('PROCESSING', 5);
+  job.input = { ...job.input, topicId: null, sourceFocus: null, learningObjective: null };
+  const page = await render(t, { generate: false, jobs: [job] });
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
+  assert.doesNotMatch(page.text(), /Có thay đổi chưa lưu/);
+  assert.match(page.text(), /Đã lưu tự động/);
+});
+
+test('polling jobs never overwrites a new form being edited', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const options = { generate: false, jobs: [savedJob('PROCESSING', 5)] };
+  const page = await render(t, options);
+  await act(async () => { await page.button('Tạo bộ mới').props.onClick(); await flush(); });
+  const focus = page.renderer.root.findAllByType('input').find((node) => node.props.maxLength === 200);
+  await act(async () => { focus.props.onChange({ target: { value: 'Nội dung bộ mới' } }); await flush(); });
+  options.loadedJob = savedJob('READY', 200); options.jobs = [options.loadedJob];
+  await act(async () => { t.mock.timers.tick(3000); await flush(); await flush(); });
+  assert.equal(page.renderer.root.findAllByType('input').find((node) => node.props.maxLength === 200).props.value, 'Nội dung bộ mới');
+  assert.equal(page.renderer.root.findAllByType('progress').length, 0);
+});
+
+test('failed saves retain the current edit when creating a new set', async (t) => {
+  const page = await render(t, { saveFailure: true });
+  await act(async () => { page.button('Sửa').props.onClick(); await flush(); });
+  await act(async () => { await page.button('Tạo bộ mới').props.onClick(); await flush(); });
+  assert.match(page.text(), /Không lưu được bản nháp/);
+  assert.ok(page.renderer.root.findAllByType('textarea').some((node) => node.props.value === 'Nội dung q1'));
 });

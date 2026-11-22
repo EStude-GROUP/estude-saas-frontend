@@ -3,6 +3,8 @@
 import Link from "@/components/ui/portal-link";
 import {
   BrainCircuit,
+  ListTodo,
+  Plus,
   Check,
   Info,
   LoaderCircle,
@@ -21,6 +23,8 @@ import {
   PageHeading,
 } from "@/components/assessment/assessment-shell";
 import { UnsavedQuestionChanges } from "./unsaved-question-changes";
+import { AiQuestionJobsDialog, AiQuestionJobProgress, aiQuestionJobStatus } from "./ai-question-jobs-dialog";
+import { aiQuestionWorkspaceSnapshot, normalizeAiQuestionForm } from "@/lib/ai-question-workspace";
 import { Button } from "@/components/ui/button";
 import { CustomSelect, Input, Textarea } from "@/components/ui/form-control";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
@@ -118,11 +122,14 @@ export function AiQuestionGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [jobs, setJobs] = useState<AiQuestionJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<AiQuestionJob | null>(null);
+  const selectedJobId = selectedJob?.id;
   const [jobError, setJobError] = useState("");
+  const [jobsOpen, setJobsOpen] = useState(false);
   const submittingJob = useRef(false);
   const pendingJobRequest = useRef<{ payload: string; key: string } | null>(null);
   const jobRunning = selectedJob?.status === "QUEUED" || selectedJob?.status === "PROCESSING";
-  const hasActiveJobs = jobs.some((job) => job.status === "QUEUED" || job.status === "PROCESSING");
+  const activeJobCount = jobs.filter((job) => job.status === "QUEUED" || job.status === "PROCESSING").length;
+  const hasActiveJobs = activeJobCount > 0;
   const [bulkApproving, setBulkApproving] = useState(false);
   const [bulkQuantity, setBulkQuantity] = useState(0);
   const [bulkMessage, setBulkMessage] = useState("");
@@ -163,7 +170,7 @@ export function AiQuestionGeneratorPage() {
   }, []);
   const workspace = { form, questionIds: questions.map((q) => q.id),
     edits: questions.flatMap((q) => editDrafts[q.id] ? [editDrafts[q.id]] : []) };
-  const snapshot = JSON.stringify(workspace);
+  const snapshot = aiQuestionWorkspaceSnapshot(workspace);
   const dirty = savedSnapshot !== null && snapshot !== savedSnapshot;
   const allQuestionsApproved = questions.length > 0 && questions.every((question) => question.status === "APPROVED");
   const warnOnLeave = (!allQuestionsApproved && dirty) || generating || bulkApproving || savingDraft;
@@ -209,11 +216,11 @@ export function AiQuestionGeneratorPage() {
         setSubjects(subjectItems);
         setDifficultySettings(teacherSettings);
         setDifficultyDraft(createDifficultyDraft(teacherSettings));
-        const nextForm = storedDraft?.form ?? {
+        const nextForm = normalizeAiQuestionForm(storedDraft?.form ?? {
           ...initialForm, materialId: pdfs[0]?.id || "", quantity: teacherSettings.defaultQuantity,
           difficulty: teacherSettings.effectiveLevels.some((level) => level.code === initialForm.difficulty)
             ? initialForm.difficulty : (teacherSettings.effectiveLevels[0]?.code ?? "MEDIUM"),
-        };
+        });
         const restoredQuestions = storedDraft?.questions ?? [];
         const restoredEdits = (storedDraft?.edits ?? []).filter((edit) => restoredQuestions.some((q) => q.id === edit.questionId && q.status === "PENDING"));
         setForm(nextForm);
@@ -221,7 +228,7 @@ export function AiQuestionGeneratorPage() {
         setEditDrafts(Object.fromEntries(restoredEdits.map((edit) => [edit.questionId, edit])));
         setDraftVersion(storedDraft?.version ?? 0);
         setSavedAt(storedDraft?.savedAt ?? null);
-        setSavedSnapshot(JSON.stringify({ form: nextForm, questionIds: restoredQuestions.map((q) => q.id), edits: restoredEdits }));
+        setSavedSnapshot(aiQuestionWorkspaceSnapshot({ form: nextForm, questionIds: restoredQuestions.map((q) => q.id), edits: restoredEdits }));
         if (storedDraft) setDraftMessage("Đã khôi phục bản nháp. Các câu hỏi vẫn cần được duyệt trước khi vào ngân hàng.");
         if (storedDraft && restoredEdits.length !== storedDraft.edits.length) setDraftMessage("Đã khôi phục bản nháp. Một số bản sửa không áp dụng vì câu hỏi đã được duyệt hoặc từ chối ở phiên khác.");
         if (storedDraft?.missingQuestionIds.length) setError("Một số câu hỏi trong bản nháp không còn khả dụng. Đã giữ lại các câu còn truy cập được.");
@@ -248,30 +255,25 @@ export function AiQuestionGeneratorPage() {
 
   useEffect(() => {
     if (loading) return;
-    if (!form.subjectId) {
+    let active = true;
+    const subjectId = form.subjectId;
+    if (!subjectId) {
       setTopics([]);
-      setForm((current) =>
-        current.topicId ? { ...current, topicId: undefined } : current,
-      );
       return;
     }
-    academicDataService
-      .getTopics(form.subjectId)
-      .then((items) => {
-        setTopics(items);
-        setForm((current) => ({
-          ...current,
-          topicId: items.some((item) => item.id === current.topicId)
-            ? current.topicId
-            : undefined,
-        }));
-      })
-      .catch((cause) => setError(errorMessage(cause, "Không thể tải chủ đề")));
-  }, [form.subjectId, loading]);
+    academicDataService.getTopics(subjectId).then((items) => {
+      if (!active) return;
+      setTopics(items);
+      // Viewing a saved job must never rewrite its configuration as catalogs load.
+      if (!selectedJobId) setForm((current) => current.subjectId === subjectId && current.topicId && !items.some((item) => item.id === current.topicId)
+        ? { ...current, topicId: undefined } : current);
+    }).catch((cause) => { if (active) setError(errorMessage(cause, "Không thể tải chủ đề")); });
+    return () => { active = false; };
+  }, [form.subjectId, loading, selectedJobId]);
 
   // Polling observes durable work; the worker continues after this page closes.
   useEffect(() => {
-    if (loading || !hasActiveJobs) return;
+    if (loading || (!hasActiveJobs && !jobsOpen)) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
@@ -284,7 +286,7 @@ export function AiQuestionGeneratorPage() {
           const savedQuestions = latest.questions ?? [];
           setSelectedJob(latest);
           setQuestions(savedQuestions);
-          setSavedSnapshot(JSON.stringify({ form: latest.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
+          setSavedSnapshot(aiQuestionWorkspaceSnapshot({ form: latest.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
         }
         setJobs(items);
         setJobError("");
@@ -295,44 +297,63 @@ export function AiQuestionGeneratorPage() {
     };
     timer = setTimeout(() => void poll(), 3000);
     return () => { active = false; clearTimeout(timer); };
-  }, [loading, hasActiveJobs, selectedJob]);
+  }, [loading, hasActiveJobs, jobsOpen, selectedJob]);
 
   function showJob(job: AiQuestionJob) {
     const savedQuestions = job.questions ?? [];
     setSelectedJob(job);
-    setForm(job.input);
+    setForm(normalizeAiQuestionForm(job.input));
     setQuestions(savedQuestions);
     setEditDrafts({});
-    setSavedSnapshot(JSON.stringify({ form: job.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
-    setDraftMessage("Tiến độ và câu hỏi được lưu tự động. Bạn có thể rời trang và mở lại từ danh sách tác vụ.");
+    setSavedSnapshot(aiQuestionWorkspaceSnapshot({ form: job.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
+    setDraftMessage("");
   }
 
   async function openJob(id: string, retry = false) {
-    if (workspaceBusy || submittingJob.current || reviewingIds.length) return;
-    if (dirty && !(await saveWorkspaceDraft())) return;
+    if (workspaceBusy || submittingJob.current || reviewingIds.length) return false;
+    if (dirty && !(await saveWorkspaceDraft())) return false;
     submittingJob.current = true;
-    setGenerating(true); setJobError("");
+    setGenerating(true); setError(""); setJobError("");
     try {
       const job = retry ? await aiQuestionService.retryJob(id) : await aiQuestionService.getJob(id);
       showJob(job);
       setJobs((items) => items.map((item) => item.id === job.id ? job : item));
+      return true;
     } catch (cause) {
       setJobError(errorMessage(cause, "Không thể mở tác vụ tạo câu hỏi."));
+      return false;
     } finally { submittingJob.current = false; setGenerating(false); }
+  }
+
+  async function startNewJob() {
+    if (workspaceBusy || submittingJob.current) return false;
+    if (dirty && !(await saveWorkspaceDraft())) return false;
+    const nextForm = normalizeAiQuestionForm(form);
+    setSelectedJob(null);
+    setForm(nextForm);
+    setQuestions([]);
+    setEditDrafts({});
+    setReviewingState({});
+    setSavedAt(null);
+    setSavedSnapshot(aiQuestionWorkspaceSnapshot({ form: nextForm, questionIds: [], edits: [] }));
+    setDraftMessage(""); setBulkMessage(""); setError(""); setJobError("");
+    pendingJobRequest.current = null;
+    return true;
   }
 
   function update<K extends keyof GenerateAiQuestionsInput>(
     key: K,
     value: GenerateAiQuestionsInput[K],
   ) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm((current) => ({ ...current, [key]: value, ...(key === "subjectId" ? { topicId: undefined } : {}) }));
   }
 
   async function generate(event: React.FormEvent) {
     event.preventDefault();
-    if (folderContextInvalid || submittingJob.current || jobRunning || bulkInFlight.current || reviewingIds.length || generating || savingDraft) return;
+    if (folderContextInvalid || submittingJob.current || selectedJob || bulkInFlight.current || reviewingIds.length || generating || savingDraft) return;
     setBulkMessage("");
     setError("");
+    if (activeJobCount >= 3) { setError("Bạn đang có 3 bộ xử lý nền. Chờ một bộ hoàn tất để gửi yêu cầu tiếp theo."); return; }
     if (!form.materialId) {
       setError("Thư viện chưa có tài liệu PDF để tạo câu hỏi.");
       return;
@@ -491,67 +512,47 @@ export function AiQuestionGeneratorPage() {
           Sau khi duyệt, câu hỏi sẽ được lưu vào thư mục <strong>{approvalFolderName}</strong>.
         </p>
       ) : null}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3">
-        <div className="text-sm text-slate-600">
-          <p role="status">{allQuestionsApproved ? "Tất cả câu hỏi đã vào ngân hàng" : dirty ? "Có thay đổi chưa lưu" : selectedJob ? "Tiến độ và kết quả đã lưu tự động" : savedAt ? `Bản nháp đã lưu lúc ${new Date(savedAt).toLocaleString("vi-VN")}` : "Chưa có bản nháp"}</p>
-          <p className="mt-1 text-xs text-slate-500">{draftMessage || "Lưu cấu hình và các câu đang duyệt để tiếp tục sau. Mỗi tài khoản giữ một bản nháp gần nhất."}</p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
+        <div className="min-w-0 text-sm">
+          <p className="font-bold text-slate-800">{selectedJob ? "Xem bộ câu hỏi" : "Tạo bộ câu hỏi mới"}</p>
+          <p role="status" className="mt-0.5 text-xs text-slate-500">{allQuestionsApproved ? "Tất cả câu hỏi đã vào ngân hàng" : dirty ? "Có thay đổi chưa lưu" : selectedJob ? "Đã lưu tự động" : savedAt ? `Bản nháp đã lưu lúc ${new Date(savedAt).toLocaleString("vi-VN")}` : "Chọn tài liệu và cấu hình để bắt đầu"}</p>
         </div>
-        <Button permission="ai_questions.create" disabled={workspaceBusy || jobRunning || !draftAvailable || !dirty} onClick={() => void saveWorkspaceDraft()}>
-          {savingDraft ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-          {savingDraft ? "Đang lưu nháp..." : "Lưu bản nháp"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {dirty || savedAt ? <Button permission="ai_questions.create" variant="ghost" size="sm" disabled={workspaceBusy || jobRunning || !draftAvailable || !dirty} onClick={() => void saveWorkspaceDraft()}>
+            {savingDraft ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}{savingDraft ? "Đang lưu nháp..." : "Lưu bản nháp"}
+          </Button> : null}
+          <Button variant="outline" size="sm" onClick={() => setJobsOpen(true)}><ListTodo className="size-4" />Tiến trình
+            {hasActiveJobs ? <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] text-brand-700"><span className="size-1.5 rounded-full bg-brand-500" />{activeJobCount} đang xử lý</span> : jobs.length ? <span className="text-slate-400">({jobs.length})</span> : null}
+          </Button>
+          <Button permission="ai_questions.create" size="sm" disabled={workspaceBusy} onClick={() => void startNewJob()}><Plus className="size-4" />Tạo bộ mới</Button>
+        </div>
       </div>
-      {error ? (
-        <div className="mb-3">
-          <ErrorPanel message={error} />
-        </div>
-      ) : null}
-      {jobs.length > 0 ? (
-        <section aria-label="Tác vụ tạo câu hỏi" className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
-          <p className="text-sm font-bold text-slate-800">Các bộ câu hỏi gần đây</p>
-          <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-            {jobs.map((job) => (
-              <Button key={job.id} size="sm" variant={selectedJob?.id === job.id ? "secondary" : "outline"}
-                disabled={workspaceBusy || reviewingIds.length > 0} onClick={() => void openJob(job.id)}>
-                {job.completed}/{job.quantity} câu · {job.status === "READY" ? "Hoàn tất" : job.status === "FAILED" ? "Cần thử lại" : job.status === "PROCESSING" ? "Đang tạo" : "Đang chờ"}
-                <span className="text-xs">{new Date(job.createdAt).toLocaleString("vi-VN")}</span>
-              </Button>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      {selectedJob ? (
-        <div role="status" className="mb-3 rounded-lg border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
-          <p className="font-bold">{selectedJob.status === "READY" ? "Đã tạo xong" : selectedJob.status === "FAILED" ? "Tác vụ tạm dừng" : "Đang xử lý nền"}: {selectedJob.completed}/{selectedJob.quantity} câu</p>
-          <progress className="mt-2 h-2 w-full" value={selectedJob.completed} max={selectedJob.quantity} aria-label="Tiến độ tạo câu hỏi" />
-          <p className="mt-2">{selectedJob.status === "FAILED"
-            ? "Các câu đã tạo vẫn được giữ. Thử tiếp tục để tạo phần còn lại; nếu tài liệu hoặc cấu hình đã đổi, hãy tạo bộ mới."
-            : jobRunning ? "Bạn có thể rời trang hoặc đóng trình duyệt. Hệ thống lưu từng lô và tự thử lại khi gặp lỗi tạm thời."
-            : "Kết quả đã được lưu. Hãy kiểm tra và duyệt câu hỏi vào ngân hàng."}</p>
-          {selectedJob.status === "FAILED" ? <Button className="mt-2" size="sm" disabled={workspaceBusy} onClick={() => void openJob(selectedJob.id, true)}>Tiếp tục phần còn lại</Button> : null}
-        </div>
-      ) : null}
+      {draftMessage ? <p role="status" className="mb-3 px-1 text-xs text-slate-500">{draftMessage}</p> : null}
+      {jobsOpen ? <AiQuestionJobsDialog open={jobsOpen} jobs={jobs} materials={materials} selectedId={selectedJob?.id} busy={workspaceBusy} error={jobError || error}
+        onClose={() => setJobsOpen(false)} onOpen={openJob} onCreate={startNewJob} /> : null}
+      {error ? <div className="mb-3"><ErrorPanel message={error} /></div> : null}
       {jobError ? <p role="alert" className="mb-3 text-sm text-rose-700">{jobError}</p> : null}
-      <div className="grid items-start gap-3 xl:grid-cols-[480px_minmax(0,1fr)]">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 xl:grid-cols-[480px_minmax(0,1fr)]">
         <form
           onSubmit={(event) => void generate(event)}
-          className="rounded-lg border border-slate-200 bg-white p-4 shadow-card xl:sticky xl:top-20 xl:max-h-[calc(100dvh-96px)] xl:overflow-y-auto"
+          className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-card xl:sticky xl:top-20 xl:max-h-[calc(100dvh-96px)] xl:overflow-y-auto"
         >
-          <fieldset disabled={savingDraft || jobRunning || generating} className="contents">
+          <fieldset disabled={savingDraft || !!selectedJob || generating} className="contents">
           <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
             <span className="grid size-9 place-items-center rounded-lg bg-violet-50 text-violet-600">
               <Sparkles className="size-[18px]" />
             </span>
             <div>
-              <h2 className="font-black text-slate-900">Cấu hình bộ câu hỏi</h2>
+              <h2 className="font-black text-slate-900">{selectedJob ? "Thông số bộ câu hỏi" : "Cấu hình bộ câu hỏi"}</h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                RAG tìm đúng đoạn liên quan trong PDF
+                {selectedJob ? "Chọn “Tạo bộ mới” để dùng lại hoặc đổi cấu hình" : "Chọn tài liệu PDF và nội dung cần tạo"}
               </p>
             </div>
           </div>
           <div className="grid gap-3">
             <Field label="Tài liệu nguồn">
               <CustomSelect
+                className="min-w-0 w-full"
                 value={form.materialId}
                 options={materials.map((material) => ({
                   value: material.id,
@@ -728,9 +729,10 @@ export function AiQuestionGeneratorPage() {
                 aria-label="Sinh lời giải chi tiết"
               />
             </div>
+            {!selectedJob && activeJobCount >= 3 ? <p className="text-xs leading-5 text-amber-700">Đang có 3 bộ xử lý nền. Bạn vẫn có thể chuẩn bị cấu hình và gửi khi một bộ hoàn tất.</p> : null}
             <Button permission="ai_questions.create"
               type="submit"
-              disabled={folderContextInvalid || jobRunning || generating || bulkApproving || savingDraft || reviewingIds.length > 0 || !materials.length}
+              disabled={folderContextInvalid || !!selectedJob || activeJobCount >= 3 || generating || bulkApproving || savingDraft || reviewingIds.length > 0 || !materials.length}
               className="w-full"
             >
               {generating ? (
@@ -752,6 +754,15 @@ export function AiQuestionGeneratorPage() {
         </form>
 
         <section className="min-w-0">
+          {selectedJob ? <div className="mb-3 rounded-lg border border-slate-200 bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold text-slate-800">{selectedJob.status === "READY" ? "Đã tạo xong" : selectedJob.status === "FAILED" ? "Tác vụ tạm dừng" : selectedJob.status === "QUEUED" ? "Đang chờ xử lý" : "Đang tạo câu hỏi"}</p>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${aiQuestionJobStatus(selectedJob.status).color}`}>{aiQuestionJobStatus(selectedJob.status).label}</span>
+            </div>
+            <div className="mt-3"><AiQuestionJobProgress job={selectedJob} /></div>
+            {jobRunning ? <p className="mt-2 text-xs leading-5 text-slate-500">Đang lưu tự động. Bạn có thể tạo bộ mới hoặc rời trang; tiến độ luôn có trong “Tiến trình”.</p> : null}
+            {selectedJob.status === "FAILED" ? <div className="mt-3 flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-slate-500">Các câu đã tạo được giữ lại. Tiếp tục để tạo phần còn thiếu.</p><Button size="sm" variant="outline" disabled={workspaceBusy} onClick={() => void openJob(selectedJob.id, true)}><RefreshCw className="size-3.5" />Tiếp tục phần còn lại</Button></div> : null}
+          </div> : null}
           {generating ? (
             <div className="grid min-h-[260px] place-items-center rounded-lg border border-slate-200 bg-white p-5 text-center shadow-card xl:min-h-[calc(100dvh-96px)]">
               <div>
@@ -837,7 +848,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5 text-sm font-bold text-slate-700">
+    <label className="grid min-w-0 grid-cols-1 gap-1.5 text-sm font-bold text-slate-700">
       {label}
       {children}
     </label>
