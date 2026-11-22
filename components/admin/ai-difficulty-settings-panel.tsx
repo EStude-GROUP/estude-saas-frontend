@@ -48,7 +48,7 @@ export function AiDifficultySettingsPanel() {
     builtInLevels.slice(0, 3),
   );
   const [maxQuestionsPerGeneration, setMaxQuestionsPerGeneration] =
-    useState(100);
+    useState(200);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -175,7 +175,7 @@ export function AiDifficultySettingsPanel() {
             label="Số câu tối đa mỗi lần tạo"
             type="number"
             min="1"
-            max="100"
+            max="200"
             required
             value={maxQuestionsPerGeneration}
             onChange={(event) =>

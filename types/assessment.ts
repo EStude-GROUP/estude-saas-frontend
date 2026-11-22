@@ -72,13 +72,6 @@ export interface ApprovedAiQuestion {
   question: Question;
 }
 
-export interface AiQuestionJob {
-  id: string;
-  status: "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
-  error?: string | null;
-  questions: GeneratedQuestion[];
-}
-
 export interface GenerateAiQuestionsInput {
   materialId: string;
   subjectId?: string;
@@ -89,6 +82,19 @@ export interface GenerateAiQuestionsInput {
   difficulty: Difficulty;
   quantity: number;
   includeExplanation: boolean;
+}
+
+export interface AiQuestionJob {
+  id: string;
+  input: GenerateAiQuestionsInput;
+  status: "QUEUED" | "PROCESSING" | "READY" | "FAILED";
+  quantity: number;
+  completed: number;
+  attempts: number;
+  errorCode: string | null;
+  questions: GeneratedQuestion[] | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AiQuestionEditDraft {

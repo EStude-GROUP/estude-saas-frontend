@@ -1,5 +1,6 @@
 import type {
   AiQuestionDraft,
+  AiQuestionJob,
   AiQuestionDraftInput,
   ApprovedAiQuestion,
   QuestionFolder,
@@ -734,6 +735,20 @@ export const questionBankService = {
 };
 
 export const aiQuestionService = {
+  listJobs(): Promise<AiQuestionJob[]> {
+    return authenticatedRequest<AiQuestionJob[]>("/ai-questions/jobs");
+  },
+  getJob(id: string): Promise<AiQuestionJob> {
+    return authenticatedRequest<AiQuestionJob>(`/ai-questions/jobs/${encodeURIComponent(id)}`);
+  },
+  createJob(payload: GenerateAiQuestionsInput, key: string): Promise<AiQuestionJob> {
+    return authenticatedRequest<AiQuestionJob>("/ai-questions/jobs", {
+      method: "POST", body: JSON.stringify(payload), headers: { "Idempotency-Key": key },
+    });
+  },
+  retryJob(id: string): Promise<AiQuestionJob> {
+    return authenticatedRequest<AiQuestionJob>(`/ai-questions/jobs/${encodeURIComponent(id)}/retry`, { method: "POST" });
+  },
   getDraft(): Promise<AiQuestionDraft | null> {
     return authenticatedRequest<AiQuestionDraft | null>("/ai-questions/draft");
   },

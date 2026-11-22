@@ -76,7 +76,7 @@ export function TeacherSettingsPage() {
   const { notify } = useActionNotification();
   const [form, setForm] = useState<TeacherExamDefaults>(DEFAULT_EXAM_DEFAULTS);
   const [aiDefaultQuantity, setAiDefaultQuantity] = useState(5);
-  const [maxAiQuestionQuantity, setMaxAiQuestionQuantity] = useState(100);
+  const [maxAiQuestionQuantity, setMaxAiQuestionQuantity] = useState(200);
   const [configured, setConfigured] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

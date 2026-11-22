@@ -16,6 +16,7 @@ const question = (id, status = 'PENDING') => ({ id, status, content: `Nội dung
 
 async function render(t, options = {}) {
   const calls = [];
+  const jobCalls = [];
   const questions = options.questions ?? [question('q1'), question('q2')];
   const previousWindow = global.window;
   if (options.folderId) global.window = { location: { search: `?folderId=${options.folderId}` } };
@@ -47,7 +48,17 @@ async function render(t, options = {}) {
         getDraft: async () => options.storedDraft ?? null,
         saveDraft: async (payload) => { calls.push({ draft: payload }); if (options.saveFailure) throw new Error('Không lưu được bản nháp'); return { version: (options.storedDraft?.version ?? 0) + 1, savedAt: '2026-09-26T10:00:00Z' }; },
         update: async (id, draft) => { options.validateUpdate?.(draft); if (options.updateFailure) throw new Error('Đáp án chưa hợp lệ'); return { ...questions.find((q) => q.id === id), ...draft }; },
-        generate: async () => questions,
+        listJobs: async () => options.jobs ?? [],
+        getJob: async (id) => options.loadedJob ?? (options.jobs ?? []).find((job) => job.id === id),
+        createJob: async (input, key) => {
+          jobCalls.push({ input, key });
+          if (options.createWait) await options.createWait;
+          if (options.createFailure) throw new Error('Mất kết nối');
+          return { id: 'job', input, status: options.jobStatus ?? 'READY', quantity: input.quantity,
+            completed: options.jobStatus === 'QUEUED' ? 0 : questions.length,
+            questions: options.jobStatus === 'QUEUED' ? [] : questions, createdAt: '2026-11-22T10:00:00Z' };
+        },
+        retryJob: async (id) => { jobCalls.push({ retry: id }); return options.retriedJob; },
         approveMany: async (ids, folderId) => {
           calls.push({ approveMany: ids, ...(folderId ? { folderId } : {}) });
           if (options.wait) await options.wait;
@@ -70,7 +81,7 @@ async function render(t, options = {}) {
   const button = (label) => renderer.root.findAllByType('button').find((b) => childText(b.props.children).includes(label));
   const approveAll = async () => { await act(async () => { button('Duyệt tất cả').props.onClick(); await flush(); }); };
   const leaveGuard = () => renderer.root.findByProps({ 'data-unsaved-guard': true });
-  return { renderer, calls, button, approveAll, leaveGuard, text: () => JSON.stringify(renderer.toJSON()) };
+  return { renderer, calls, jobCalls, button, approveAll, leaveGuard, text: () => JSON.stringify(renderer.toJSON()) };
 }
 
 test('approves only pending questions and disables the batch button when none remain', async (t) => {
@@ -84,18 +95,18 @@ test('approves only pending questions and disables the batch button when none re
 
 test('does not warn on navigation after all generated questions have been approved', async (t) => {
   const page = await render(t);
-  assert.equal(page.leaveGuard().props['data-unsaved-guard'], true);
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
   await page.approveAll();
   assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
   assert.match(page.text(), /Tất cả câu hỏi đã vào ngân hàng/);
   assert.doesNotMatch(page.text(), /Có thay đổi chưa lưu/);
 });
 
-test('keeps the leave warning when approval fails and questions remain pending', async (t) => {
+test('keeps saved job questions available when approval fails', async (t) => {
   const page = await render(t, { fail: 'q2' });
   await page.approveAll();
-  assert.equal(page.leaveGuard().props['data-unsaved-guard'], true);
-  assert.match(page.text(), /Có thay đổi chưa lưu/);
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
+  assert.match(page.text(), /Cần chỉnh sửa đáp án/);
 });
 
 test('retains the full pending batch after failure and retries it with one request', async (t) => {
@@ -193,3 +204,65 @@ test('failed question updates retain the editor, and failed draft saves keep uns
 });
 
  test("requires an assigned subject before AI generation", async (t) => { const page = await render(t, { selectSubject: false }); assert.match(page.text(), /Chọn môn học được phân công trước khi tạo câu hỏi/); assert.equal(page.button("Duyệt tất cả"), undefined); });
+
+
+test('queues in the background and allows leaving without a draft save', async (t) => {
+  const page = await render(t, { jobStatus: 'QUEUED' });
+  assert.match(page.text(), /Đang xử lý nền/);
+  assert.match(page.text(), /Bạn có thể rời trang hoặc đóng trình duyệt/);
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
+  assert.equal(page.jobCalls.length, 1);
+  assert.equal(page.button('Tạo câu hỏi').props.disabled, true);
+});
+
+test('reuses the idempotency key after an uncertain network failure', async (t) => {
+  const options = { createFailure: true };
+  const page = await render(t, options);
+  assert.match(page.text(), /Mất kết nối/);
+  options.createFailure = false;
+  await act(async () => { page.renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }); await flush(); });
+  assert.equal(page.jobCalls.length, 2);
+  assert.equal(page.jobCalls[0].key, page.jobCalls[1].key);
+  assert.match(page.text(), /Đã tạo xong/);
+});
+
+test('blocks duplicate submissions before React has rendered the pending state', async (t) => {
+  let release;
+  const options = { generate: false, createWait: new Promise((resolve) => { release = resolve; }) };
+  const page = await render(t, options);
+  await act(async () => { page.renderer.root.findByProps({ 'data-subject-select': true }).props.onChange({ target: { value: 'subject' } }); await flush(); });
+  await act(async () => {
+    const submit = page.renderer.root.findByType('form').props.onSubmit;
+    submit({ preventDefault() {} }); submit({ preventDefault() {} }); await flush();
+  });
+  assert.equal(page.jobCalls.length, 1);
+  await act(async () => { release(); await flush(); });
+});
+
+const savedJob = (status, completed) => ({ id: 'saved-job', status, completed, quantity: 200,
+  input: { materialId: 'material', subjectId: 'subject', questionType: 'SINGLE_CHOICE', difficulty: 'MEDIUM', quantity: 200, includeExplanation: true },
+  questions: completed ? [question('saved-q')] : [], createdAt: '2026-11-22T10:00:00Z' });
+
+test('restores a background job and renders its final result on the last poll', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const options = { generate: false, jobs: [savedJob('PROCESSING', 5)] };
+  const page = await render(t, options);
+  assert.match(page.text(), /Đang xử lý nền/);
+  assert.equal(page.renderer.root.findAllByProps({ 'data-unsaved-guard': true }).length, 0);
+  options.loadedJob = savedJob('READY', 200);
+  options.jobs = [options.loadedJob];
+  await act(async () => { t.mock.timers.tick(3000); await flush(); await flush(); });
+  assert.match(page.text(), /Đã tạo xong/);
+  assert.equal(page.button('Tạo câu hỏi').props.disabled, false);
+  assert.equal(page.button('Duyệt tất cả').props.disabled, false);
+});
+
+test('resumes only the missing part of a failed job', async (t) => {
+  const options = { generate: false, jobs: [savedJob('FAILED', 5)], retriedJob: savedJob('QUEUED', 5) };
+  const page = await render(t, options);
+  assert.match(page.text(), /Tác vụ tạm dừng/);
+  await act(async () => { page.button('Tiếp tục phần còn lại').props.onClick(); await flush(); });
+  assert.deepEqual(page.jobCalls, [{ retry: 'saved-job' }]);
+  assert.equal(page.renderer.root.findByType('progress').props.value, 5);
+  assert.match(page.text(), /Đang xử lý nền/);
+});

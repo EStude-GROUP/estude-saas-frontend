@@ -33,6 +33,7 @@ import {
 import { getVietnameseSubjectName } from "@/lib/subject-localization";
 import type {
   AiQuestionEditDraft,
+  AiQuestionJob,
   Difficulty,
   DifficultyLevelDefinition,
   GenerateAiQuestionsInput,
@@ -115,6 +116,13 @@ export function AiQuestionGeneratorPage() {
   const [savingDifficulty, setSavingDifficulty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [jobs, setJobs] = useState<AiQuestionJob[]>([]);
+  const [selectedJob, setSelectedJob] = useState<AiQuestionJob | null>(null);
+  const [jobError, setJobError] = useState("");
+  const submittingJob = useRef(false);
+  const pendingJobRequest = useRef<{ payload: string; key: string } | null>(null);
+  const jobRunning = selectedJob?.status === "QUEUED" || selectedJob?.status === "PROCESSING";
+  const hasActiveJobs = jobs.some((job) => job.status === "QUEUED" || job.status === "PROCESSING");
   const [bulkApproving, setBulkApproving] = useState(false);
   const [bulkQuantity, setBulkQuantity] = useState(0);
   const [bulkMessage, setBulkMessage] = useState("");
@@ -166,6 +174,7 @@ export function AiQuestionGeneratorPage() {
     const requestedFolderId = typeof window === "undefined"
       ? null : new URLSearchParams(window.location.search).get("folderId");
     Promise.all([
+      aiQuestionService.listJobs(),
       academicDataService.getMaterialLibrary(),
       academicDataService.getSubjects(),
       aiQuestionSettingsService.getMine(),
@@ -178,8 +187,9 @@ export function AiQuestionGeneratorPage() {
         return null;
       }),
     ])
-      .then(([materialItems, subjectItems, teacherSettings, folderItems, storedDraft]) => {
+      .then(async ([jobItems, materialItems, subjectItems, teacherSettings, folderItems, storedDraft]) => {
         if (!active) return;
+        setJobs(jobItems);
         if (requestedFolderId) {
           const folder = folderItems.find((item) => item.id === requestedFolderId);
           if (folder) {
@@ -215,6 +225,16 @@ export function AiQuestionGeneratorPage() {
         if (storedDraft) setDraftMessage("Đã khôi phục bản nháp. Các câu hỏi vẫn cần được duyệt trước khi vào ngân hàng.");
         if (storedDraft && restoredEdits.length !== storedDraft.edits.length) setDraftMessage("Đã khôi phục bản nháp. Một số bản sửa không áp dụng vì câu hỏi đã được duyệt hoặc từ chối ở phiên khác.");
         if (storedDraft?.missingQuestionIds.length) setError("Một số câu hỏi trong bản nháp không còn khả dụng. Đã giữ lại các câu còn truy cập được.");
+        const latestJob = jobItems[0];
+        if (latestJob && (!storedDraft || latestJob.createdAt > storedDraft.savedAt)) {
+          try {
+            const restoredJob = await aiQuestionService.getJob(latestJob.id);
+            if (!active) return;
+            showJob(restoredJob);
+          } catch (cause) {
+            if (active) setJobError(errorMessage(cause, "Không thể khôi phục tác vụ tạo câu hỏi."));
+          }
+        }
       })
       .catch((cause) => {
         if (active) {
@@ -249,6 +269,58 @@ export function AiQuestionGeneratorPage() {
       .catch((cause) => setError(errorMessage(cause, "Không thể tải chủ đề")));
   }, [form.subjectId, loading]);
 
+  // Polling observes durable work; the worker continues after this page closes.
+  useEffect(() => {
+    if (loading || !hasActiveJobs) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const items = await aiQuestionService.listJobs();
+        if (!active) return;
+        if (selectedJob && (selectedJob.status === "QUEUED" || selectedJob.status === "PROCESSING")) {
+          const latest = await aiQuestionService.getJob(selectedJob.id);
+          if (!active) return;
+          const savedQuestions = latest.questions ?? [];
+          setSelectedJob(latest);
+          setQuestions(savedQuestions);
+          setSavedSnapshot(JSON.stringify({ form: latest.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
+        }
+        setJobs(items);
+        setJobError("");
+      } catch (cause) {
+        if (active) setJobError(errorMessage(cause, "Mất kết nối theo dõi tiến độ. Hệ thống vẫn tiếp tục xử lý."));
+      }
+      if (active) timer = setTimeout(() => void poll(), 3000);
+    };
+    timer = setTimeout(() => void poll(), 3000);
+    return () => { active = false; clearTimeout(timer); };
+  }, [loading, hasActiveJobs, selectedJob]);
+
+  function showJob(job: AiQuestionJob) {
+    const savedQuestions = job.questions ?? [];
+    setSelectedJob(job);
+    setForm(job.input);
+    setQuestions(savedQuestions);
+    setEditDrafts({});
+    setSavedSnapshot(JSON.stringify({ form: job.input, questionIds: savedQuestions.map((q) => q.id), edits: [] }));
+    setDraftMessage("Tiến độ và câu hỏi được lưu tự động. Bạn có thể rời trang và mở lại từ danh sách tác vụ.");
+  }
+
+  async function openJob(id: string, retry = false) {
+    if (workspaceBusy || submittingJob.current || reviewingIds.length) return;
+    if (dirty && !(await saveWorkspaceDraft())) return;
+    submittingJob.current = true;
+    setGenerating(true); setJobError("");
+    try {
+      const job = retry ? await aiQuestionService.retryJob(id) : await aiQuestionService.getJob(id);
+      showJob(job);
+      setJobs((items) => items.map((item) => item.id === job.id ? job : item));
+    } catch (cause) {
+      setJobError(errorMessage(cause, "Không thể mở tác vụ tạo câu hỏi."));
+    } finally { submittingJob.current = false; setGenerating(false); }
+  }
+
   function update<K extends keyof GenerateAiQuestionsInput>(
     key: K,
     value: GenerateAiQuestionsInput[K],
@@ -258,7 +330,7 @@ export function AiQuestionGeneratorPage() {
 
   async function generate(event: React.FormEvent) {
     event.preventDefault();
-    if (folderContextInvalid || bulkInFlight.current || reviewingIds.length || generating || savingDraft) return;
+    if (folderContextInvalid || submittingJob.current || jobRunning || bulkInFlight.current || reviewingIds.length || generating || savingDraft) return;
     setBulkMessage("");
     setError("");
     if (!form.materialId) {
@@ -266,7 +338,7 @@ export function AiQuestionGeneratorPage() {
       return;
     }
     const maxQuantity =
-      difficultySettings?.maxQuestionsPerGeneration ?? 100;
+      difficultySettings?.maxQuestionsPerGeneration ?? 200;
     if (
       !Number.isInteger(form.quantity) ||
       form.quantity < 1 ||
@@ -276,15 +348,22 @@ export function AiQuestionGeneratorPage() {
       return;
     }
     if (!form.subjectId) { setError("Chọn môn học được phân công trước khi tạo câu hỏi."); return; }
+    submittingJob.current = true;
     setGenerating(true);
-    setQuestions([]);
-    setEditDrafts({});
-    setDraftMessage("");
+    const payload = JSON.stringify(form);
+    // Reuse the key when an accepted request loses its response.
+    if (pendingJobRequest.current?.payload !== payload) {
+      pendingJobRequest.current = { payload, key: crypto.randomUUID() };
+    }
     try {
-      setQuestions(await aiQuestionService.generate(form));
+      const job = await aiQuestionService.createJob(form, pendingJobRequest.current.key);
+      pendingJobRequest.current = null;
+      showJob(job);
+      setJobs((items) => [job, ...items.filter((item) => item.id !== job.id)]);
     } catch (cause) {
       setError(errorMessage(cause, "Không thể tạo câu hỏi bằng AI"));
     } finally {
+      submittingJob.current = false;
       setGenerating(false);
     }
   }
@@ -414,10 +493,10 @@ export function AiQuestionGeneratorPage() {
       ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3">
         <div className="text-sm text-slate-600">
-          <p role="status">{allQuestionsApproved ? "Tất cả câu hỏi đã vào ngân hàng" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Bản nháp đã lưu lúc ${new Date(savedAt).toLocaleString("vi-VN")}` : "Chưa có bản nháp"}</p>
+          <p role="status">{allQuestionsApproved ? "Tất cả câu hỏi đã vào ngân hàng" : dirty ? "Có thay đổi chưa lưu" : selectedJob ? "Tiến độ và kết quả đã lưu tự động" : savedAt ? `Bản nháp đã lưu lúc ${new Date(savedAt).toLocaleString("vi-VN")}` : "Chưa có bản nháp"}</p>
           <p className="mt-1 text-xs text-slate-500">{draftMessage || "Lưu cấu hình và các câu đang duyệt để tiếp tục sau. Mỗi tài khoản giữ một bản nháp gần nhất."}</p>
         </div>
-        <Button permission="ai_questions.create" disabled={workspaceBusy || !draftAvailable || !dirty} onClick={() => void saveWorkspaceDraft()}>
+        <Button permission="ai_questions.create" disabled={workspaceBusy || jobRunning || !draftAvailable || !dirty} onClick={() => void saveWorkspaceDraft()}>
           {savingDraft ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
           {savingDraft ? "Đang lưu nháp..." : "Lưu bản nháp"}
         </Button>
@@ -427,12 +506,38 @@ export function AiQuestionGeneratorPage() {
           <ErrorPanel message={error} />
         </div>
       ) : null}
+      {jobs.length > 0 ? (
+        <section aria-label="Tác vụ tạo câu hỏi" className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
+          <p className="text-sm font-bold text-slate-800">Các bộ câu hỏi gần đây</p>
+          <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+            {jobs.map((job) => (
+              <Button key={job.id} size="sm" variant={selectedJob?.id === job.id ? "secondary" : "outline"}
+                disabled={workspaceBusy || reviewingIds.length > 0} onClick={() => void openJob(job.id)}>
+                {job.completed}/{job.quantity} câu · {job.status === "READY" ? "Hoàn tất" : job.status === "FAILED" ? "Cần thử lại" : job.status === "PROCESSING" ? "Đang tạo" : "Đang chờ"}
+                <span className="text-xs">{new Date(job.createdAt).toLocaleString("vi-VN")}</span>
+              </Button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {selectedJob ? (
+        <div role="status" className="mb-3 rounded-lg border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
+          <p className="font-bold">{selectedJob.status === "READY" ? "Đã tạo xong" : selectedJob.status === "FAILED" ? "Tác vụ tạm dừng" : "Đang xử lý nền"}: {selectedJob.completed}/{selectedJob.quantity} câu</p>
+          <progress className="mt-2 h-2 w-full" value={selectedJob.completed} max={selectedJob.quantity} aria-label="Tiến độ tạo câu hỏi" />
+          <p className="mt-2">{selectedJob.status === "FAILED"
+            ? "Các câu đã tạo vẫn được giữ. Thử tiếp tục để tạo phần còn lại; nếu tài liệu hoặc cấu hình đã đổi, hãy tạo bộ mới."
+            : jobRunning ? "Bạn có thể rời trang hoặc đóng trình duyệt. Hệ thống lưu từng lô và tự thử lại khi gặp lỗi tạm thời."
+            : "Kết quả đã được lưu. Hãy kiểm tra và duyệt câu hỏi vào ngân hàng."}</p>
+          {selectedJob.status === "FAILED" ? <Button className="mt-2" size="sm" disabled={workspaceBusy} onClick={() => void openJob(selectedJob.id, true)}>Tiếp tục phần còn lại</Button> : null}
+        </div>
+      ) : null}
+      {jobError ? <p role="alert" className="mb-3 text-sm text-rose-700">{jobError}</p> : null}
       <div className="grid items-start gap-3 xl:grid-cols-[480px_minmax(0,1fr)]">
         <form
           onSubmit={(event) => void generate(event)}
           className="rounded-lg border border-slate-200 bg-white p-4 shadow-card xl:sticky xl:top-20 xl:max-h-[calc(100dvh-96px)] xl:overflow-y-auto"
         >
-          <fieldset disabled={savingDraft} className="contents">
+          <fieldset disabled={savingDraft || jobRunning || generating} className="contents">
           <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
             <span className="grid size-9 place-items-center rounded-lg bg-violet-50 text-violet-600">
               <Sparkles className="size-[18px]" />
@@ -594,7 +699,7 @@ export function AiQuestionGeneratorPage() {
                   type="number"
                   min="1"
                   max={
-                    difficultySettings?.maxQuestionsPerGeneration ?? 100
+                    difficultySettings?.maxQuestionsPerGeneration ?? 200
                   }
                   required
                   value={form.quantity}
@@ -603,7 +708,7 @@ export function AiQuestionGeneratorPage() {
                   }
                 />
                 <span className="text-xs font-normal text-slate-400">
-                  Tối đa {difficultySettings?.maxQuestionsPerGeneration ?? 100}{" "}
+                  Tối đa {difficultySettings?.maxQuestionsPerGeneration ?? 200}{" "}
                   câu mỗi lần tạo.
                 </span>
               </Field>
@@ -625,7 +730,7 @@ export function AiQuestionGeneratorPage() {
             </div>
             <Button permission="ai_questions.create"
               type="submit"
-              disabled={folderContextInvalid || generating || bulkApproving || savingDraft || reviewingIds.length > 0 || !materials.length}
+              disabled={folderContextInvalid || jobRunning || generating || bulkApproving || savingDraft || reviewingIds.length > 0 || !materials.length}
               className="w-full"
             >
               {generating ? (
@@ -633,7 +738,7 @@ export function AiQuestionGeneratorPage() {
               ) : (
                 <Sparkles className="size-4" />
               )}
-              {generating ? "Đang xử lý tài liệu..." : "Tạo câu hỏi"}
+              {generating ? "Đang gửi yêu cầu..." : "Tạo câu hỏi"}
             </Button>
           </div>
           <div className="mt-3 flex gap-2 rounded-lg bg-slate-50 p-2.5 text-xs leading-5 text-slate-500">
@@ -652,10 +757,10 @@ export function AiQuestionGeneratorPage() {
               <div>
                 <LoaderCircle className="mx-auto size-9 animate-spin text-violet-600" />
                 <p className="mt-4 font-black text-slate-800">
-                  Đang chuẩn bị tài liệu, tạo và kiểm tra câu hỏi...
+                  Đang gửi yêu cầu tạo câu hỏi...
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
-                  Tài liệu đã lập chỉ mục sẽ được dùng lại. AI cần thêm thời gian để tạo câu hỏi và kiểm tra đáp án.
+                  Yêu cầu được lưu vào hàng đợi để xử lý nền.
                 </p>
               </div>
             </div>
@@ -672,7 +777,7 @@ export function AiQuestionGeneratorPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button permission="ai_questions.approve" size="sm"
-                    disabled={folderContextInvalid || bulkApproving || savingDraft || reviewingIds.length > 0 || pendingCount === 0}
+                    disabled={folderContextInvalid || jobRunning || bulkApproving || savingDraft || reviewingIds.length > 0 || pendingCount === 0}
                     onClick={() => void approveAll()}>
                     {bulkApproving ? <LoaderCircle className="size-4 animate-spin" /> : <Check className="size-4" />}
                     {bulkApproving ? `Đang duyệt ${bulkQuantity} câu...` : `Duyệt tất cả (${pendingCount})`}
@@ -698,7 +803,7 @@ export function AiQuestionGeneratorPage() {
                   onReplace={replaceQuestion}
                   onError={setError}
                   folderId={approvalFolderId ?? undefined}
-                  bulkApproving={folderContextInvalid || bulkApproving || savingDraft}
+                  bulkApproving={folderContextInvalid || jobRunning || bulkApproving || savingDraft}
                   onReviewingChange={onReviewingChange}
                   initialEdit={editDrafts[question.id]}
                   onEditDraftChange={onEditDraftChange}
@@ -714,7 +819,7 @@ export function AiQuestionGeneratorPage() {
                 Chưa có kết quả
               </h2>
               <p className="mt-1 max-w-md text-sm leading-5 text-slate-500">
-                Chọn tài liệu, thiết lập thông số rồi nhấn “Tạo câu hỏi”.
+                {jobRunning ? "Đã xếp hàng. Các câu hỏi sẽ xuất hiện sau khi lô đầu tiên hoàn tất." : "Chọn tài liệu, thiết lập thông số rồi nhấn “Tạo câu hỏi”."}
               </p>
             </div>
           )}

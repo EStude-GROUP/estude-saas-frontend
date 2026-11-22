@@ -45,4 +45,16 @@ test("AI question workspace uses the available draft and generation endpoints", 
   assert.deepEqual(JSON.parse(calls[4].options.body), {
     questionIds: ["question"], folderId: "folder",
   });
+  calls.length = 0;
+  await service.createJob({ materialId: "material", quantity: 200 }, "request-key");
+  await service.listJobs();
+  await service.getJob("job/id");
+  await service.retryJob("job/id");
+  assert.deepEqual(calls.map((call) => [call.url, call.options?.method ?? "GET"]), [
+    ["/ai-questions/jobs", "POST"], ["/ai-questions/jobs", "GET"],
+    ["/ai-questions/jobs/job%2Fid", "GET"], ["/ai-questions/jobs/job%2Fid/retry", "POST"],
+  ]);
+  assert.equal(calls[0].options.headers["Idempotency-Key"], "request-key");
+  assert.equal(JSON.parse(calls[0].options.body).quantity, 200);
+
 });
