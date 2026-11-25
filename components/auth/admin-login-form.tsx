@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "@/lib/portal-navigation";
-import Link from "@/components/ui/portal-link";
 import { LoaderCircle, LockKeyhole, UserRound } from "lucide-react";
 import { AuthNotice } from "@/components/auth/auth-notice";
 import { FormField } from "@/components/auth/form-field";
@@ -98,11 +97,6 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
                   ? "Đăng nhập Phụ huynh"
                   : "Đăng nhập cho học sinh"}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            {role === "ADMIN"
-              ? "Sử dụng tài khoản quản trị để tiếp tục."
-              : `Sử dụng tài khoản ${roleName} để tiếp tục.`}
-          </p>
         </div>
 
         <form className="mt-7 space-y-5" onSubmit={handleSubmit} noValidate>
@@ -180,10 +174,6 @@ export function StaffLoginForm({ role }: { role: UserRole }) {
             ? "Chỉ dành cho quản trị viên được cấp quyền."
             : `Chỉ dành cho ${roleName} được cấp tài khoản.`}
         </p>
-        <nav aria-label="Thông tin EStude" className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-slate-100 pt-4 text-sm font-semibold text-slate-500">
-          <Link href="/about" className="rounded py-1 hover:text-brand-600 focus-visible:outline-brand-600">Giới thiệu EStude</Link>
-          <Link href="/help" className="rounded py-1 hover:text-brand-600 focus-visible:outline-brand-600">Hướng dẫn sử dụng</Link>
-        </nav>
       </section>
 
     </main>
