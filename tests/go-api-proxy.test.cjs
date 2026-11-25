@@ -252,3 +252,18 @@ test('school proxy forwards a mobile avatar above 1 MiB while keeping bounded li
   assert.equal(oversized.status, 413);
   assert.equal(count, 1);
 });
+
+test('caches only the versioned school logo; everything else stays no-store', async (t) => {
+  await listen(t, http.createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=300' });
+    res.end('png');
+  }));
+  const versioned = await proxy.forwardGoApi(request('/api/v1/tenant/logo?v=7'));
+  assert.equal(versioned.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  for (const url of ['/api/v1/tenant/logo', '/api/v1/tenant/logo?v=abc', '/api/v1/tenant']) {
+    const response = await proxy.forwardGoApi(request(url));
+    assert.equal(response.headers.get('cache-control'), 'no-store', url);
+    await response.arrayBuffer();
+  }
+  await versioned.arrayBuffer();
+});

@@ -167,6 +167,16 @@ export async function forwardGoApi(request: Request): Promise<Response> {
       }
       for (const cookie of incoming.headers["set-cookie"] ?? []) reply.append("set-cookie", cookie);
       const status = incoming.statusCode ?? 502;
+      // The school logo URL carries ?v=<settings revision>, which changes with every
+      // settings update, so a versioned URL can be cached by the browser indefinitely.
+      const incomingUrl = new URL(request.url);
+      if (
+        status === 200 && request.method === "GET" &&
+        incomingUrl.pathname === "/api/v1/tenant/logo" &&
+        /^[0-9]{1,18}$/.test(incomingUrl.searchParams.get("v") ?? "")
+      ) {
+        reply.set("Cache-Control", "public, max-age=31536000, immutable");
+      }
       const noBody = [204, 205, 304].includes(status) || request.method === "HEAD";
       if (noBody) incoming.resume();
       responded = true;
