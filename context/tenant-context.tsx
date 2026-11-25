@@ -9,17 +9,17 @@ import {
 } from "react";
 import { tenantPalette, applyTenantFavicon } from "@/lib/tenant-branding";
 import { getPortalFromHost } from "@/lib/portal";
-type Tenant = {
-  id: string;
-  slug: string;
-  name: string;
-  portal: string;
-  branding: { logoUrl?: string; displayName: string; primaryColor: string; timezone: string };
-};
+import type { Tenant } from "@/lib/tenant-types";
 const TenantContext = createContext<Tenant | null>(null);
 export const useTenant = () => useContext(TenantContext);
-export function TenantProvider({ children }: { children: ReactNode }) {
-  const [tenant, setTenant] = useState<Tenant | null>(null),
+export function TenantProvider({
+  children,
+  initialTenant = null,
+}: {
+  children: ReactNode;
+  initialTenant?: Tenant | null;
+}) {
+  const [tenant, setTenant] = useState<Tenant | null>(initialTenant),
     [error, setError] = useState(""),
     [refresh, setRefresh] = useState(0);
   const retry = useCallback(() => setRefresh((v) => v + 1), []);

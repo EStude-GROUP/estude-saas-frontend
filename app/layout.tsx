@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { loadServerTenant } from "@/lib/server-tenant";
+import { tenantPalette } from "@/lib/tenant-branding";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
 import { PermissionsProvider } from "@/context/permissions-context";
@@ -25,12 +27,20 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const requestHeaders = await headers();
-  const portal = getPortalFromHost(requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host"));
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const portal = getPortalFromHost(host);
+  // Resolve school branding on the server so the first paint is already themed.
+  const tenant = await loadServerTenant(host);
+  const brandVars = tenant
+    ? Object.fromEntries(
+        Object.entries(tenantPalette(tenant.branding.primaryColor)).map(([shade, color]) => [`--brand-${shade}`, color]),
+      )
+    : undefined;
   return (
-    <html lang="vi">
+    <html lang="vi" style={brandVars as CSSProperties | undefined} data-tenant-id={tenant?.id} data-tenant-slug={tenant?.slug}>
       <body className={inter.variable} suppressHydrationWarning>
         <PortalRoutingProvider portal={portal}>
-          <TenantProvider>
+          <TenantProvider initialTenant={tenant}>
             <AuthProvider>
               <PermissionsProvider>
                 <ActionNotificationProvider>
