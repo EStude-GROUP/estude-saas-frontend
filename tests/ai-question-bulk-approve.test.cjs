@@ -320,3 +320,36 @@ test('failed saves retain the current edit when creating a new set', async (t) =
   assert.match(page.text(), /Không lưu được bản nháp/);
   assert.ok(page.renderer.root.findAllByType('textarea').some((node) => node.props.value === 'Nội dung q1'));
 });
+
+const essay = (id) => ({ id, status: 'PENDING', content: `Phân tích ${id}`, difficulty: 'MEDIUM', options: [], correctOptionIds: [],
+  explanation: 'Ý chính: nguyên nhân (1đ); hệ quả (1đ)', source: { documentName: 'Sử.pdf', page: 3 }, type: 'ESSAY' });
+
+test('the generator offers essay questions and sends the type to the background job', async (t) => {
+  const page = await render(t, { generate: false, questions: [essay('e1')] });
+  assert.ok(page.button('Tự luận'), 'essay appears next to multiple choice and true/false');
+  await act(async () => { page.renderer.root.findByProps({ 'data-subject-select': true }).props.onChange({ target: { value: 'subject' } }); await flush(); });
+  await act(async () => { page.button('Tự luận').props.onClick(); await flush(); });
+  await act(async () => { page.renderer.root.findByType('form').props.onSubmit({ preventDefault() {} }); await flush(); });
+  assert.equal(page.jobCalls[0].input.questionType, 'ESSAY');
+});
+
+test('generated essays show no answer options and label the explanation as a marking guide', async (t) => {
+  const page = await render(t, { questions: [essay('e1'), question('q1')] });
+  const shown = page.text();
+  assert.match(shown, /Phân tích e1/);
+  assert.match(shown, /Gợi ý đáp án và thang điểm:/);
+  assert.match(shown, /Ý chính: nguyên nhân/);
+  assert.match(shown, /Tự luận/);
+  // The multiple-choice card still shows its option, the essay card shows none.
+  assert.equal((shown.match(/Đáp án/g) ?? []).length, 1);
+});
+
+test('editing an essay keeps it free of options and saves only text, difficulty and the marking guide', async (t) => {
+  let saved;
+  const page = await render(t, { questions: [essay('e1')], validateUpdate: (draft) => { saved = draft; } });
+  await act(async () => { page.button('Sửa').props.onClick(); await flush(); });
+  assert.equal(page.renderer.root.findAllByType('input').filter((node) => node.props.value === 'Đáp án').length, 0, 'no option inputs for an essay');
+  await act(async () => { page.renderer.root.findAllByType('button').find((node) => childText(node.props.children) === 'Lưu').props.onClick(); await flush(); });
+  assert.deepEqual([saved.options, saved.correctOptionIds], [[], []]);
+  assert.match(saved.explanation, /Ý chính/);
+});

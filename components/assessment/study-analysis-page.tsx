@@ -1,5 +1,7 @@
 "use client";
 
+import { PracticeThptInput } from "@/components/assessment/practice-thpt-input";
+import { applyPracticeChoice, isThptPracticeType, storedPracticeAnswer, toPracticeSubmission } from "@/lib/practice-answers";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -151,17 +153,10 @@ export function StudentStudyAnalysisPage() {
   function choose(questionId: string, optionId: string) {
     if (practice?.status === "SUBMITTED" || !practice?.startedAt) return;
     const question = practice.questions.find((item) => item.id === questionId);
-    setAnswers((current) => {
-      if (question?.type !== "MULTIPLE_CHOICE")
-        return { ...current, [questionId]: [optionId] };
-      const selected = current[questionId] ?? [];
-      return {
-        ...current,
-        [questionId]: selected.includes(optionId)
-          ? selected.filter((id) => id !== optionId)
-          : [...selected, optionId],
-      };
-    });
+    setAnswers((current) => ({
+      ...current,
+      [questionId]: applyPracticeChoice(question, current[questionId] ?? [], optionId),
+    }));
   }
 
   async function startPractice(mode: StudyPracticeMode) {
@@ -197,20 +192,14 @@ export function StudentStudyAnalysisPage() {
       const updated = await examAttemptService.submitStudyPractice(
         practice.id,
         practice.attemptId,
-        practice.questions.map((question) => ({
-          questionId: question.id,
-          selectedOptionIds: answers[question.id] ?? [],
-        })),
+        practice.questions.map((question) => toPracticeSubmission(question, answers[question.id])),
       );
       setAnalysis((current) =>
         current ? { ...current, practiceSet: updated } : current,
       );
       setAnswers(
         Object.fromEntries(
-          updated.questions.map((question) => [
-            question.id,
-            question.selectedOptionIds ?? [],
-          ]),
+          updated.questions.map((question) => [question.id, storedPracticeAnswer(question)]),
         ),
       );
     } catch (cause) {
@@ -985,6 +974,9 @@ export function PracticeSection({
                   {sourceMeta[question.sourceType].label}
                 </span>
               </div>
+              {isThptPracticeType(question.type) ? (
+                <PracticeThptInput question={question} values={answers[question.id]} locked review onChoose={onChoose} />
+              ) : (
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {question.options.map((option) => {
                   const selected = answers[question.id]?.includes(option.id);
@@ -1016,6 +1008,7 @@ export function PracticeSection({
                   );
                 })}
               </div>
+              )}
               {submitted ? (
                 <div
                   className={`mt-4 rounded-xl p-4 text-sm ${question.correct ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"}`}
@@ -1106,8 +1099,15 @@ function PracticeQuestionRunner({
           <p className="mt-2 text-sm text-slate-500">
             Chủ đề: {question.topicName} · {question.type === "MULTIPLE_CHOICE"
               ? "Chọn tất cả đáp án đúng."
-              : "Chọn một đáp án phù hợp nhất."}
+              : question.type === "TRUE_FALSE_SET"
+                ? "Chọn Đúng hoặc Sai cho từng mệnh đề."
+                : question.type === "SHORT_ANSWER"
+                  ? "Điền đáp án là một số."
+                  : "Chọn một đáp án phù hợp nhất."}
           </p>
+          {isThptPracticeType(question.type) ? (
+            <PracticeThptInput question={question} values={answers[question.id]} locked={locked} review={false} onChoose={onChoose} />
+          ) : (
           <div className="mt-6 space-y-3">
             {question.options.map((option) => {
               const selected = answers[question.id]?.includes(option.id);
@@ -1129,6 +1129,7 @@ function PracticeQuestionRunner({
               );
             })}
           </div>
+          )}
           {mode === "EASY" ? (
             <div className="mt-5">
               {hints[question.id] ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { ThptAnswerReview } from "@/components/assessment/thpt-answer-review";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -340,6 +341,8 @@ export function StudentEvidencePanel({
                         Chưa có kết quả chấm tự luận đầy đủ
                       </p>
                     </>
+                  ) : q.type === "TRUE_FALSE_SET" || q.type === "SHORT_ANSWER" ? (
+                    <ThptAnswerReview question={q} answer={answer} />
                   ) : (
                     <ul className="mt-2 space-y-1 text-sm">
                       {q.options.map((o) => (

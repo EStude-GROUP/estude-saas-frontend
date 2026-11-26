@@ -3,6 +3,8 @@
 import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 import { assessmentPurposeLabels, type AssessmentPurpose } from "@/lib/internal-results";
 import { answerReleaseLabel } from "@/lib/exam-answer-release";
+import { answerModeLabels, answerModeOf, suggestedAnswerMode } from "@/lib/exam-photo";
+import { takeExamSetDraft } from "@/lib/exam-print-draft";
 
 import Link from "@/components/ui/portal-link";
 import {courseOfferingApi,type CourseOffering} from "@/lib/course-offering-api";
@@ -11,6 +13,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Printer,
   Archive,
   BookOpen,
   CalendarClock,
@@ -78,6 +81,7 @@ import {
   DIFFICULTY_LABELS,
   EXAM_STATUS_LABELS,
   QUESTION_TYPE_LABELS,
+  type EssayAnswerMode,
   type Exam,
   type ExamInput,
   type ExamQuestion,
@@ -754,9 +758,9 @@ export function ExamWizardPage({
           });
           setRequiresAccessCode(makeup ? false : exam.requiresAccessCode);
           setHadAccessCode(makeup ? false : exam.requiresAccessCode);
-          const examQuestions = [...exam.questions].sort(
-            (left, right) => left.order - right.order,
-          );
+          const examQuestions = [...exam.questions]
+            .sort((left, right) => left.order - right.order)
+            .map((item) => (item.question?.type === "ESSAY" ? { ...item, answerMode: answerModeOf(item.question) } : item));
           const examMaximumPoints =
             exam.totalPoints > 0
               ? Math.min(exam.totalPoints, DEFAULT_MAX_POINTS)
@@ -789,6 +793,30 @@ export function ExamWizardPage({
             classId: firstClass.id,
             className: firstClass.name,
           }));
+        // Hand-off from the AI exam-set page: start with its questions and official points.
+        const draft =
+          typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromSet")
+            ? takeExamSetDraft()
+            : null;
+        if (draft?.subjectId) {
+          const draftSubject = assignedSubjects.find((subject) => subject.id === draft.subjectId);
+          const draftClass =
+            loadedClasses.find((schoolClass) => schoolClass.subjects.some((subject) => subject.id === draft.subjectId)) ?? firstClass;
+          if (draftSubject && draftClass) {
+            setInfo((current) => ({
+              ...current,
+              title: draft.title,
+              subjectId: draftSubject.id,
+              subjectName: getVietnameseSubjectName(draftSubject),
+              classId: draftClass.id,
+              className: draftClass.name,
+            }));
+            setSettings((current) => ({ ...current, durationMinutes: draft.minutes }));
+            setSelected(draft.items.map((item, order) => ({ questionId: item.questionId, points: item.points, order })));
+            setMaximumPoints(Math.min(DEFAULT_MAX_POINTS, Math.round(draft.items.reduce((sum, item) => sum + item.points, 0) * 1000) / 1000));
+            setScoreDistributionMode("custom");
+          }
+        }
         if (!firstClass || !firstSubject) {
           reportError(
             "Bạn chưa được phân công môn học và lớp để tạo bài kiểm tra.",
@@ -934,6 +962,7 @@ export function ExamWizardPage({
               questionId: question.id,
               points: 0,
               order: items.length,
+              ...(question.type === "ESSAY" ? { answerMode: suggestedAnswerMode(info.subjectName) } : {}),
             },
           ];
       return applyCurrentScoreDistribution(nextItems);
@@ -974,9 +1003,14 @@ export function ExamWizardPage({
         questionId: question.id,
         points: 0,
         order: 0,
+        ...(question.type === "ESSAY" ? { answerMode: suggestedAnswerMode(info.subjectName) } : {}),
       }));
     setSelected(applyCurrentScoreDistribution([...retained, ...added]));
     setQuestionPickerOpen(false);
+  }
+
+  function updateAnswerMode(questionId: string, mode: EssayAnswerMode) {
+    setSelected((items) => items.map((item) => (item.questionId === questionId ? { ...item, answerMode: mode } : item)));
   }
 
   function updateQuestionPoints(questionId: string, points: number) {
@@ -1498,6 +1532,22 @@ export function ExamWizardPage({
                               <Trash2 className="size-3.5" />
                             </Button>
                           </div>
+                          {question!.type === "ESSAY" ? (
+                            <div className="mt-3 border-t border-slate-100 pt-3">
+                              <CustomSelect
+                                label="Cách làm bài tự luận"
+                                value={answerModeOf(selected.find((item) => item.questionId === question!.id))}
+                                options={(Object.keys(answerModeLabels) as EssayAnswerMode[]).map((mode) => ({ value: mode, label: answerModeLabels[mode] }))}
+                                onValueChange={(mode) => updateAnswerMode(question!.id, mode as EssayAnswerMode)}
+                                ariaLabel={`Cách làm bài câu ${index + 1}`}
+                              />
+                              {answerModeOf(selected.find((item) => item.questionId === question!.id)) !== "TYPED" ? (
+                                <p className="mt-1.5 text-[11px] leading-4 text-slate-400">
+                                  Học sinh làm trên giấy rồi chụp ảnh tải lên; bạn xem ảnh khi chấm điểm.
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
                           <div className="mt-3 flex items-end justify-between gap-2 border-t border-slate-100 pt-3">
                             <div className="mr-auto">
                               <p className="mb-1 text-[11px] font-semibold text-slate-500">
@@ -2224,6 +2274,7 @@ export function ExamDetailPage() {
         eyebrow="Exam detail"
         title={exam.title}
         description={`${toVietnameseSubjectName(exam.subjectName)} · ${exam.className}`}
+        action={<Link href={`/teacher/exams/${exam.id}/print`}><Button variant="outline"><Printer className="size-4" /> In đề / PDF</Button></Link>}
       />
       <ExamDetailTabs examId={exam.id} active="overview" />
       {exam.makeupOfExamId ? <p className="my-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">Đề thi bù riêng · Chỉ dành cho học sinh được chọn. Điểm cao nhất đã chấm được tính vào <Link className="underline" href={`/teacher/exams/${exam.makeupOfExamId}`}>bài kiểm tra gốc</Link>.</p> : null}

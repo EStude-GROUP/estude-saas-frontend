@@ -1,5 +1,6 @@
 "use client";
 
+import { applyPracticeChoice, storedPracticeAnswer, toPracticeSubmission } from "@/lib/practice-answers";
 import Link from "@/components/ui/portal-link";
 import { courseWorkspaceHref } from "@/lib/course-workspace";
 import { useParams } from "@/lib/portal-navigation";
@@ -47,11 +48,10 @@ export function MaterialPlanPracticePage() {
         ? await examAttemptService.startStudyPractice(practice.id, practice.attemptId, mode ?? "EASY")
         : action === "submit"
           ? await examAttemptService.submitStudyPractice(practice.id, practice.attemptId,
-            practice.questions.map((question) => ({ questionId: question.id,
-              selectedOptionIds: answers[question.id] ?? [] })))
+            practice.questions.map((question) => toPracticeSubmission(question, answers[question.id])))
           : await examAttemptService.retryStudyPractice(practice.id, practice.attemptId);
       setPractice(next);
-      setAnswers(Object.fromEntries(next.questions.map((question) => [question.id, question.selectedOptionIds ?? []])));
+      setAnswers(Object.fromEntries(next.questions.map((question) => [question.id, storedPracticeAnswer(question)])));
       setHints({});
       if (action === "submit") setPlan(await learningPlanService.getMine(params.id));
     } catch (cause) {
@@ -97,7 +97,7 @@ export function MaterialPlanPracticePage() {
           answeredCount={practice.questions.filter((question) => answers[question.id]?.length).length}
           starting={busy === "start"} submitting={busy === "submit"} retrying={busy === "retry"}
           hints={hints}
-          onChoose={(questionId, optionId) => setAnswers((current) => ({ ...current, [questionId]: [optionId] }))}
+          onChoose={(questionId, optionId) => setAnswers((current) => ({ ...current, [questionId]: applyPracticeChoice(practice.questions.find((item) => item.id === questionId), current[questionId] ?? [], optionId) }))}
           onStart={(mode) => void run("start", mode)}
           onSubmit={() => void run("submit")}
           onRetry={() => void run("retry")}

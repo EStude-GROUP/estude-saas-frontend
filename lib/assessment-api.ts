@@ -30,6 +30,7 @@ import type {
   ExamListAiAnalysis,
   ExamInput,
   ExamAnswer,
+  ExamAnswerFile,
   AcademicYear,
   ClassRoster,
   AvailableStudentsPage,
@@ -884,10 +885,23 @@ export const teacherSettingsService = {
   },
 };
 
+async function sha256Hex(file: Blob): Promise<string> {
+  if (typeof crypto === "undefined" || !crypto.subtle) return "";
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 // Go resolves definition and taxonomy from the owned bank; submitted snapshots
 // from the editor are display data and must never be accepted as authority.
 function examWriteInput<T extends ExamInput>(payload: T): T {
-  return { ...payload, questions: payload.questions.map(({ questionId, points, order }) => ({ questionId, points, order })) };
+  return {
+    ...payload,
+    questions: payload.questions.map(({ questionId, points, order, answerMode }) => ({
+      questionId, points, order,
+      // Omitted means "type on screen"; only photo options are sent.
+      ...(answerMode === "PHOTO" || answerMode === "BOTH" ? { answerMode } : {}),
+    })),
+  };
 }
 
 export const examService = {
@@ -1212,6 +1226,23 @@ export const examAttemptService = {
       },
     );
   },
+  /** Pre-signed upload of one photographed page, then server-side verification. */
+  async uploadAnswerPhoto(attemptId: string, questionId: string, file: File): Promise<ExamAnswerFile> {
+    const session = await authenticatedRequest<{ file: ExamAnswerFile; uploadUrl: string }>(
+      `/exam-attempts/${encodeURIComponent(attemptId)}/questions/${encodeURIComponent(questionId)}/files/upload-url`,
+      { method: "POST", body: JSON.stringify({ fileName: file.name, contentType: file.type, fileSize: file.size, sha256: await sha256Hex(file) }) },
+    );
+    const response = await fetch(session.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+    if (!response.ok) throw new Error("Không tải được ảnh lên. Hãy kiểm tra mạng và thử lại.");
+    return authenticatedRequest<ExamAnswerFile>(`/student/exam-answer-files/${encodeURIComponent(session.file.id)}/confirm`, { method: "POST" });
+  },
+  deleteAnswerPhoto(fileId: string): Promise<{ deleted: boolean }> {
+    return authenticatedRequest<{ deleted: boolean }>(`/student/exam-answer-files/${encodeURIComponent(fileId)}`, { method: "DELETE" });
+  },
+  /** A one-minute URL to view a photo (the student's own, or a teacher's class). */
+  answerPhotoUrl(fileId: string): Promise<{ url: string; expiresIn: number }> {
+    return authenticatedRequest<{ url: string; expiresIn: number }>(`/exam-answer-files/${encodeURIComponent(fileId)}/access`);
+  },
   submitExam(id: string, answers: ExamAnswer[]): Promise<ExamAttempt> {
     return authenticatedRequest<ExamAttempt>(
       `/exam-attempts/${encodeURIComponent(id)}/submit`,
@@ -1282,7 +1313,7 @@ export const examAttemptService = {
   submitStudyPractice(
     id: string,
     attemptId: string,
-    answers: Array<{ questionId: string; selectedOptionIds: string[] }>,
+    answers: Array<{ questionId: string; selectedOptionIds: string[]; falseOptionIds?: string[]; essayText?: string }>,
   ): Promise<StudyPracticeSet> {
     return authenticatedRequest<StudyPracticeSet>(
       `/study-practice-sets/${encodeURIComponent(id)}/submit`,

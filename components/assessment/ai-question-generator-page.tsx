@@ -26,8 +26,11 @@ import { UnsavedQuestionChanges } from "./unsaved-question-changes";
 import { AiQuestionJobsDialog, AiQuestionJobProgress, aiQuestionJobStatus } from "./ai-question-jobs-dialog";
 import { aiQuestionWorkspaceSnapshot, normalizeAiQuestionForm } from "@/lib/ai-question-workspace";
 import { Button } from "@/components/ui/button";
+import { QuestionFigurePreview } from "./question-figure-preview";
+import { attachFigureImages } from "@/lib/ai-question-figures";
 import { CustomSelect, Input, Textarea } from "@/components/ui/form-control";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { QUESTION_TYPE_LABELS } from "@/types/assessment";
 import {
   academicDataService,
   aiQuestionService,
@@ -475,7 +478,8 @@ export function AiQuestionGeneratorPage() {
       const results = await aiQuestionService.approveMany(pending.map((question) => question.id), approvalFolderId ?? undefined);
       const approved = new Map(results.map((result) => [result.generatedQuestion.id, result.generatedQuestion]));
       setQuestions((current) => current.map((question) => approved.get(question.id) ?? question));
-      setBulkMessage(`Đã duyệt ${results.length} câu vào ngân hàng.`);
+      const figureFailures = await attachFigureImages(results);
+      setBulkMessage(`Đã duyệt ${results.length} câu vào ngân hàng.${figureFailures ? ` ${figureFailures} câu chưa gắn được hình — mở câu đó trong ngân hàng để chèn ảnh.` : ""}`);
     } catch (cause) {
       setBulkMessage("Chưa duyệt được bộ câu hỏi. Kiểm tra lỗi rồi thử lại.");
       setError(errorMessage(cause, "Không thể duyệt bộ câu hỏi. Các câu vẫn được giữ để thử lại."));
@@ -635,11 +639,14 @@ export function AiQuestionGeneratorPage() {
                 </Field>
               </div>
               <Field label="Loại câu hỏi">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {(
                     [
                       ["SINGLE_CHOICE", "Trắc nghiệm"],
                       ["TRUE_FALSE", "Đúng / Sai"],
+                      ["TRUE_FALSE_SET", "Đúng/Sai 4 ý (THPT)"],
+                      ["SHORT_ANSWER", "Trả lời ngắn (THPT)"],
+                      ["ESSAY", "Tự luận"],
                     ] as const
                   ).map(([value, label]) => (
                     <ChoiceButton
@@ -717,16 +724,18 @@ export function AiQuestionGeneratorPage() {
             <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3">
               <span>
                 <b className="block text-sm text-slate-700">
-                  Sinh lời giải chi tiết
+                  {form.questionType === "ESSAY" ? "Sinh gợi ý đáp án và thang điểm" : "Sinh lời giải chi tiết"}
                 </b>
                 <small className="text-xs text-slate-400">
-                  Giúp kiểm tra đáp án trước khi duyệt
+                  {form.questionType === "ESSAY"
+                    ? "Các ý chính cần có để bạn chấm bài tự luận; lưu ở phần lời giải của câu hỏi"
+                    : "Giúp kiểm tra đáp án trước khi duyệt"}
                 </small>
               </span>
               <ToggleSwitch
                 checked={form.includeExplanation}
                 onCheckedChange={(checked) => update("includeExplanation", checked)}
-                aria-label="Sinh lời giải chi tiết"
+                aria-label={form.questionType === "ESSAY" ? "Sinh gợi ý đáp án và thang điểm" : "Sinh lời giải chi tiết"}
               />
             </div>
             {!selectedJob && activeJobCount >= 3 ? <p className="text-xs leading-5 text-amber-700">Đang có 3 bộ xử lý nền. Bạn vẫn có thể chuẩn bị cấu hình và gửi khi một bộ hoàn tất.</p> : null}
@@ -1054,6 +1063,7 @@ function GeneratedQuestionCard({
     try {
       const result = await aiQuestionService.approve(question.id, folderId);
       onReplace(result.generatedQuestion);
+      if (await attachFigureImages([result])) onError("Đã duyệt câu hỏi nhưng chưa gắn được hình. Mở câu này trong ngân hàng để chèn ảnh.");
     } catch (cause) {
       onError(errorMessage(cause, "Không thể duyệt câu hỏi"));
     } finally {
@@ -1095,6 +1105,9 @@ function GeneratedQuestionCard({
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-brand-600">
             Câu {index + 1}
+            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold normal-case tracking-normal text-slate-600">
+              {question.type === "SINGLE_CHOICE" ? "Trắc nghiệm" : QUESTION_TYPE_LABELS[question.type]}
+            </span>
           </p>
           <p className="mt-1 text-xs text-slate-400">
             {question.source.documentName} · trang {question.source.page}
@@ -1145,7 +1158,15 @@ function GeneratedQuestionCard({
             ariaLabel="Chọn độ khó"
           />
           <div className="grid gap-2">
-            {draft.options.map((option, optionIndex) => (
+            {question.type === "SHORT_ANSWER" ? (
+              <Input
+                disabled={busy || bulkApproving}
+                value={draft.correctOptionIds.join("; ")}
+                onChange={(event) => setDraft((current) => ({ ...current, correctOptionIds: event.target.value.split(";").map((part) => part.trimStart()) }))}
+                label="Đáp án chấp nhận (cách nhau bởi dấu ;)"
+              />
+            ) : null}
+            {question.type === "ESSAY" || question.type === "SHORT_ANSWER" ? null : draft.options.map((option, optionIndex) => (
               <div key={option.id} className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1154,7 +1175,12 @@ function GeneratedQuestionCard({
                   onClick={() =>
                     setDraft((current) => ({
                       ...current,
-                      correctOptionIds: [option.id],
+                      correctOptionIds:
+                        question.type === "TRUE_FALSE_SET"
+                          ? current.correctOptionIds.includes(option.id)
+                            ? current.correctOptionIds.filter((id) => id !== option.id)
+                            : [...current.correctOptionIds, option.id]
+                          : [option.id],
                     }))
                   }
                   className={`!size-9 shrink-0 !p-0 text-xs font-black ${draft.correctOptionIds.includes(option.id) ? "border-brand-600 !bg-brand-600 text-white" : "border-slate-300 text-slate-500"}`}
@@ -1183,7 +1209,7 @@ function GeneratedQuestionCard({
                 explanation: event.target.value,
               }))
             }
-            placeholder="Lời giải"
+            placeholder={question.type === "ESSAY" ? "Gợi ý đáp án và thang điểm" : "Lời giải"}
           />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" disabled={busy || bulkApproving} onClick={() => setEditing(false)}>
@@ -1202,7 +1228,12 @@ function GeneratedQuestionCard({
             {question.content}
           </h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {question.options.map((option) => (
+            {question.type === "SHORT_ANSWER" ? (
+              <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-sm font-bold text-emerald-800 sm:col-span-2">
+                Đáp án: {question.correctOptionIds.join("  hoặc  ")}
+              </p>
+            ) : null}
+            {question.type === "ESSAY" || question.type === "SHORT_ANSWER" ? null : question.options.map((option) => (
               <div
                 key={option.id}
                 className={`rounded-lg border p-2.5 text-sm ${question.correctOptionIds.includes(option.id) ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600"}`}
@@ -1212,9 +1243,10 @@ function GeneratedQuestionCard({
               </div>
             ))}
           </div>
+          {question.figure && question.figure.kind !== "NONE" ? <QuestionFigurePreview figure={question.figure} /> : null}
           {question.explanation ? (
             <p className="mt-3 rounded-lg bg-blue-50 p-2.5 text-sm leading-6 text-slate-600">
-              <b className="text-brand-700">Lời giải:</b> {question.explanation}
+              <b className="text-brand-700">{question.type === "ESSAY" ? "Gợi ý đáp án và thang điểm:" : "Lời giải:"}</b> {question.explanation}
             </p>
           ) : null}
           <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3">
@@ -1268,3 +1300,4 @@ function GeneratedQuestionCard({
     </article>
   );
 }
+

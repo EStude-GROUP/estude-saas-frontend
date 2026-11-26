@@ -1,4 +1,7 @@
 "use client";
+import { ThptAnswerReview } from "@/components/assessment/thpt-answer-review";
+import { objectiveRatio } from "@/lib/thpt";
+import { ExamPhotoGallery } from "@/components/assessment/exam-photo-gallery";
 import { defineToolbarFilter, ResponsiveFilterToolbar } from "@/components/ui/responsive-filter-toolbar";
 
 import { FEATURES } from "@/lib/features";
@@ -2027,11 +2030,14 @@ export function SubmissionDetailPage() {
               const isObjective = Boolean(
                 question && question.type !== "ESSAY",
               );
+              const isThptType = question?.type === "TRUE_FALSE_SET" || question?.type === "SHORT_ANSWER";
               const isCorrect =
-                isObjective &&
-                selectedOptionIds.length > 0 &&
-                selectedOptionIds.length === correctOptionIds.length &&
-                selectedOptionIds.every((id) => correctOptionIds.includes(id));
+                isObjective && question && isThptType
+                  ? objectiveRatio(question, answer) === 1
+                  : isObjective &&
+                    selectedOptionIds.length > 0 &&
+                    selectedOptionIds.length === correctOptionIds.length &&
+                    selectedOptionIds.every((id) => correctOptionIds.includes(id));
               return (
                 <article
                   key={examQuestion.questionId}
@@ -2065,7 +2071,9 @@ export function SubmissionDetailPage() {
                     </div>
                   </div>
 
-                  {isObjective ? (
+                  {isObjective && question && isThptType ? (
+                    <ThptAnswerReview question={question} answer={answer} points={examQuestion.points} />
+                  ) : isObjective ? (
                     <div className="mt-4">
                       <div className="grid gap-2 sm:grid-cols-2">
                         {question?.options.map((option, optionIndex) => {
@@ -2122,8 +2130,9 @@ export function SubmissionDetailPage() {
                         Câu trả lời
                       </p>
                       <p className="mt-2 whitespace-pre-wrap font-semibold leading-6 text-slate-700">
-                        {answer?.essayText || "Bỏ trống"}
+                        {answer?.essayText || (data.answerFiles?.[examQuestion.questionId]?.length ? "Không nhập chữ — xem ảnh bài làm bên dưới" : "Bỏ trống")}
                       </p>
+                      <ExamPhotoGallery files={data.answerFiles?.[examQuestion.questionId] ?? []} />
                     </div>
                   )}
                   {isObjective && data.status === "SUBMITTED" && data.exam.status === "ENDED" && question ? (

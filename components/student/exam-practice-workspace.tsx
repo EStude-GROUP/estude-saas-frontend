@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { PracticeSection } from "@/components/assessment/study-analysis-page";
 import { Button } from "@/components/ui/button";
 import { examAttemptService } from "@/lib/assessment-api";
+import { applyPracticeChoice, storedPracticeAnswer, toPracticeSubmission } from "@/lib/practice-answers";
 import { loadOrCreateStudentStudyAnalysis } from "@/lib/study-analysis-loader";
 import type {
   StudyAnalysis,
@@ -40,10 +41,7 @@ export function ExamPracticeWorkspace({
         setAnswers(
           loaded.practiceSet?.status === "SUBMITTED"
             ? Object.fromEntries(
-                loaded.practiceSet.questions.map((question) => [
-                  question.id,
-                  question.selectedOptionIds ?? [],
-                ]),
+                loaded.practiceSet.questions.map((question) => [question.id, storedPracticeAnswer(question)]),
               )
             : {},
         );
@@ -79,17 +77,10 @@ export function ExamPracticeWorkspace({
     if (!practice || practice.status === "SUBMITTED" || !practice.startedAt)
       return;
     const question = practice.questions.find((item) => item.id === questionId);
-    setAnswers((current) => {
-      if (question?.type !== "MULTIPLE_CHOICE")
-        return { ...current, [questionId]: [optionId] };
-      const selected = current[questionId] ?? [];
-      return {
-        ...current,
-        [questionId]: selected.includes(optionId)
-          ? selected.filter((id) => id !== optionId)
-          : [...selected, optionId],
-      };
-    });
+    setAnswers((current) => ({
+      ...current,
+      [questionId]: applyPracticeChoice(question, current[questionId] ?? [], optionId),
+    }));
   }
 
   async function start(mode: StudyPracticeMode) {
@@ -122,18 +113,12 @@ export function ExamPracticeWorkspace({
       const updated = await examAttemptService.submitStudyPractice(
         practice.id,
         practice.attemptId,
-        practice.questions.map((question) => ({
-          questionId: question.id,
-          selectedOptionIds: answers[question.id] ?? [],
-        })),
+        practice.questions.map((question) => toPracticeSubmission(question, answers[question.id])),
       );
       updatePractice(updated);
       setAnswers(
         Object.fromEntries(
-          updated.questions.map((question) => [
-            question.id,
-            question.selectedOptionIds ?? [],
-          ]),
+          updated.questions.map((question) => [question.id, storedPracticeAnswer(question)]),
         ),
       );
     } catch (cause) {

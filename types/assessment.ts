@@ -1,6 +1,11 @@
 import type { AssessmentPurpose } from '@/lib/internal-results';
 export type QuestionType =
-  "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "TRUE_FALSE" | "ESSAY";
+  | "SINGLE_CHOICE"
+  | "MULTIPLE_CHOICE"
+  | "TRUE_FALSE"
+  | "TRUE_FALSE_SET"
+  | "SHORT_ANSWER"
+  | "ESSAY";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD" | "VERY_HARD";
 
 export interface QuestionOption {
@@ -51,6 +56,36 @@ export interface QuestionSource {
   verification?: "AI_REVIEWED" | "TEACHER_EDITED";
 }
 
+export interface QuestionFigure {
+  kind: "NONE" | "GRAPH" | "GEOMETRY" | "SOLID" | "DIAGRAM";
+  functions: { expr: string; label: string }[];
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  points: { name: string; x: number; y: number; z?: number }[];
+  segments: { from: string; to: string; hidden?: boolean }[];
+  circles: { center: string; radius: number }[];
+  rightAngles: { at: string; from: string; to: string }[];
+  caption: string;
+  xLabel?: string;
+  yLabel?: string;
+  shapes?: QuestionFigureShape[];
+}
+
+export interface QuestionFigureShape {
+  type: "LINE" | "ARROW" | "SPRING" | "BLOCK" | "GROUND" | "CIRCLE" | "TEXT";
+  x: number;
+  y: number;
+  x2: number;
+  y2: number;
+  w: number;
+  h: number;
+  r: number;
+  label: string;
+  dashed: boolean;
+}
+
 export type GeneratedQuestionStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface GeneratedQuestion extends Omit<
@@ -63,6 +98,7 @@ export interface GeneratedQuestion extends Omit<
   status: GeneratedQuestionStatus;
   generatedByAi: true;
   sourceFocus?: string | null;
+  figure?: QuestionFigure | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -78,10 +114,11 @@ export interface GenerateAiQuestionsInput {
   topicId?: string;
   sourceFocus?: string;
   learningObjective?: string;
-  questionType: Extract<QuestionType, "SINGLE_CHOICE" | "TRUE_FALSE">;
+  questionType: Extract<QuestionType, "SINGLE_CHOICE" | "TRUE_FALSE" | "TRUE_FALSE_SET" | "SHORT_ANSWER" | "ESSAY">;
   difficulty: Difficulty;
   quantity: number;
   includeExplanation: boolean;
+  defaultPoints?: number;
 }
 
 export interface AiQuestionJob {
@@ -491,7 +528,23 @@ export interface StudentExamAttemptSummary {
   submittedAt: string | null;
 }
 
+/** How a student answers an essay question: on screen, photographing handwriting, or either. */
+export type EssayAnswerMode = "TYPED" | "PHOTO" | "BOTH";
+
+/** One photographed page of a handwritten essay answer. */
+export interface ExamAnswerFile {
+  id: string;
+  questionId: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  status: "PENDING" | "READY";
+  createdAt: string;
+}
+
 export interface ExamQuestion {
+  /** Essay questions only; anything else is answered on screen. */
+  answerMode?: EssayAnswerMode;
   faultPolicy?: 'FULL_CREDIT' | 'EXCLUDE';
   type?: QuestionType;
   content?: string;
@@ -514,6 +567,7 @@ export interface ExamQuestion {
     imageUrl?: string | null;
     imageEnabled?: boolean;
     type: QuestionType;
+    answerMode?: EssayAnswerMode;
     options: QuestionOption[];
     correctOptionIds?: string[];
     explanation?: string;
@@ -617,6 +671,8 @@ export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED";
 export interface ExamAnswer {
   questionId: string;
   selectedOptionIds: string[];
+  /** TRUE_FALSE_SET only: statements judged "Sai" (selectedOptionIds holds those judged "Đúng"). */
+  falseOptionIds?: string[];
   essayText: string;
   flagged: boolean;
   clientSequence?: number;
@@ -631,6 +687,8 @@ export interface ExamManualGrade {
 }
 
 export interface ExamAttempt {
+  /** Photographed essay answers, grouped by question id. */
+  answerFiles?: Record<string, ExamAnswerFile[]>;
   answersReleased?: boolean;
   answerReleaseMessage?: string;
   reviewRequired?: boolean;
@@ -1132,6 +1190,10 @@ export interface StudyPracticeQuestion {
   correctOptionIds?: string[];
   explanation?: string;
   selectedOptionIds?: string[];
+  /** TRUE_FALSE_SET: statements the student judged "Sai". */
+  falseOptionIds?: string[];
+  /** SHORT_ANSWER: what the student typed. */
+  essayText?: string;
   correct?: boolean;
 }
 
@@ -1239,6 +1301,7 @@ export interface AssessmentEvidence {
   answers: Array<{
     questionId: string;
     selectedOptionIds: string[];
+    falseOptionIds?: string[];
     essayText?: string;
   }>;
 }
@@ -1319,6 +1382,7 @@ export interface AssessmentEvidenceRecord {
   answers: Array<{
     questionId: string;
     selectedOptionIds: string[];
+    falseOptionIds?: string[];
     essayText?: string;
   }>;
   objective?: LearningObjectiveEvidence;
@@ -1733,6 +1797,8 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   SINGLE_CHOICE: "Một đáp án",
   MULTIPLE_CHOICE: "Nhiều đáp án",
   TRUE_FALSE: "Đúng / Sai",
+  TRUE_FALSE_SET: "Đúng / Sai (4 ý)",
+  SHORT_ANSWER: "Trả lời ngắn",
   ESSAY: "Tự luận",
 };
 

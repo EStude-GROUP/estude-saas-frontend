@@ -259,3 +259,11 @@ main > div > div.pb-8 > div.mb-6:first-child {
 .project-checkbox[type='radio']:checked {
   background-image: radial-gradient(circle, white 0 35%, transparent 40%);
 }
+
+/* Printed exam papers: hide the app chrome and print only the paper. */
+@media print {
+  body * { visibility: hidden !important; }
+  .print-paper, .print-paper * { visibility: visible !important; }
+  .print-paper { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: 0 !important; }
+  @page { size: A4; margin: 14mm 14mm 16mm; }
+}
