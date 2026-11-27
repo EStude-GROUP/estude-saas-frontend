@@ -30,6 +30,9 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/form-control";
 import { Modal } from "@/components/ui/modal";
 import { QuestionImageViewer } from "@/components/assessment/question-image-viewer";
+import { ExamPhotoAnswer } from "@/components/assessment/exam-photo-answer";
+import { acceptsPhotos, acceptsTyping, answerModeOf } from "@/lib/exam-photo";
+import { hasAnswer, judgeStatement, statementJudgement } from "@/lib/thpt";
 import { examAttemptService, examService } from "@/lib/assessment-api";
 import { attemptDeadlineMs, clockOffsetMs, secondsRemaining } from "@/lib/exam-clock";
 import { loadOrCreateStudentStudyAnalysis } from "@/lib/study-analysis-loader";
@@ -878,9 +881,11 @@ export function StudentAttemptPage() {
       </AssessmentShell>
     );
   const answer = currentAnswer(currentQuestion.questionId);
-  const answeredCount = Object.values(answers).filter(
-    (item) => item.selectedOptionIds.length > 0 || item.essayText.trim(),
-  ).length;
+  const photoCount = (questionId: string) => attempt.answerFiles?.[questionId]?.length ?? 0;
+  const answeredCount = orderedQuestions.filter((item) => {
+    const given = answers[item.questionId];
+    return hasAnswer(given) || photoCount(item.questionId) > 0;
+  }).length;
   const minutes = Math.floor(secondsLeft / 60)
     .toString()
     .padStart(2, "0");
@@ -984,21 +989,77 @@ export function StudentAttemptPage() {
                   : `Các đáp án của câu ${index + 1}`
               }
             >
-              {currentQuestion.question?.type === "ESSAY" ? (
-                <Textarea
-                  aria-label={`Câu trả lời tự luận cho câu ${index + 1}`}
-                  disabled={locked}
-                  value={answer.essayText}
-                  onChange={(event) =>
-                    saveLocally({
-                      ...answer,
-                      essayText: event.target.value,
-                    })
-                  }
-                  rows={8}
-                  className="min-h-48"
-                  placeholder="Nhập câu trả lời của bạn..."
-                />
+              {currentQuestion.question?.type === "SHORT_ANSWER" ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <Input
+                    label="Đáp án của bạn"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    maxLength={8}
+                    disabled={locked}
+                    value={answer.essayText}
+                    onChange={(event) => saveLocally({ ...answer, essayText: event.target.value })}
+                    placeholder="Ví dụ: 12 hoặc -0,25"
+                    hint="Điền một số, tối đa 4 ký tự (kể cả dấu âm và dấu phẩy)."
+                  />
+                </div>
+              ) : currentQuestion.question?.type === "TRUE_FALSE_SET" ? (
+                currentQuestion.question.options.map((option) => {
+                  const judged = statementJudgement(answer, option.id);
+                  return (
+                    <div key={option.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 p-3">
+                      <span className="grid size-8 place-items-center rounded-lg bg-slate-100 text-sm font-black text-slate-700">{option.label}</span>
+                      <span className="min-w-0 flex-1 text-sm font-semibold text-slate-700">{option.text}</span>
+                      <div role="radiogroup" aria-label={`Mệnh đề ${option.label}`} className="flex gap-2">
+                        {([true, false] as const).map((value) => (
+                          <Button
+                            key={String(value)}
+                            variant={judged === value ? "primary" : "outline"}
+                            size="sm"
+                            role="radio"
+                            aria-checked={judged === value}
+                            disabled={locked}
+                            onClick={() => saveLocally(judgeStatement(answer, option.id, value))}
+                          >
+                            {value ? "Đúng" : "Sai"}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : currentQuestion.question?.type === "ESSAY" ? (
+                <>
+                  {acceptsPhotos(answerModeOf(currentQuestion.question)) ? (
+                    <ExamPhotoAnswer
+                      attemptId={attempt.id}
+                      questionId={currentQuestion.questionId}
+                      files={attempt.answerFiles?.[currentQuestion.questionId] ?? []}
+                      disabled={locked}
+                      onFilesChange={(files) =>
+                        setAttempt((current) =>
+                          current ? { ...current, answerFiles: { ...(current.answerFiles ?? {}), [currentQuestion.questionId]: files } } : current,
+                        )
+                      }
+                    />
+                  ) : null}
+                  {acceptsTyping(answerModeOf(currentQuestion.question)) ? (
+                    <Textarea
+                      aria-label={`Câu trả lời tự luận cho câu ${index + 1}`}
+                      disabled={locked}
+                      value={answer.essayText}
+                      onChange={(event) =>
+                        saveLocally({
+                          ...answer,
+                          essayText: event.target.value,
+                        })
+                      }
+                      rows={acceptsPhotos(answerModeOf(currentQuestion.question)) ? 4 : 8}
+                      className={acceptsPhotos(answerModeOf(currentQuestion.question)) ? "min-h-24" : "min-h-48"}
+                      placeholder={acceptsPhotos(answerModeOf(currentQuestion.question)) ? "Ghi chú thêm bằng chữ (không bắt buộc)..." : "Nhập câu trả lời của bạn..."}
+                    />
+                  ) : null}
+                </>
               ) : (
                 currentQuestion.question?.options.map((option) => (
                   <Button variant="plain"
@@ -1071,9 +1132,7 @@ export function StudentAttemptPage() {
           <div className="mt-4 grid grid-cols-5 gap-2">
             {orderedQuestions.map((item, itemIndex) => {
               const itemAnswer = currentAnswer(item.questionId);
-              const isAnswered =
-                itemAnswer.selectedOptionIds.length > 0 ||
-                Boolean(itemAnswer.essayText.trim());
+              const isAnswered = hasAnswer(itemAnswer) || photoCount(item.questionId) > 0;
               return (
                 <Button variant="plain"
                   key={item.questionId}
@@ -1319,10 +1378,14 @@ export function StudentResultPage() {
             <p className="text-xs text-slate-400">Đã trả lời</p>
             <p className="mt-1 font-black">
               {
-                attempt.answers.filter(
-                  (answer) =>
-                    answer.selectedOptionIds.length || answer.essayText,
-                ).length
+                new Set([
+                  ...attempt.answers
+                    .filter((answer) => hasAnswer(answer))
+                    .map((answer) => answer.questionId),
+                  ...Object.entries(attempt.answerFiles ?? {})
+                    .filter(([, list]) => list.length > 0)
+                    .map(([questionId]) => questionId),
+                ]).size
               }
               /{total}
             </p>

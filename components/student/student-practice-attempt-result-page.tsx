@@ -1,5 +1,7 @@
 "use client";
 
+import { PracticeThptInput } from "@/components/assessment/practice-thpt-input";
+import { isThptPracticeType, storedPracticeAnswer } from "@/lib/practice-answers";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -154,6 +156,9 @@ export function StudentPracticeAttemptResultPage() {
                     </span>
                   </div>
 
+                  {isThptPracticeType(question.type) ? (
+                    <PracticeThptInput question={question} values={storedPracticeAnswer(question)} locked review onChoose={() => undefined} />
+                  ) : (
                   <div className="mt-5 grid gap-2 sm:grid-cols-2">
                     {question.options.map((option) => {
                       const chosen = question.selectedOptionIds?.includes(option.id);
@@ -171,6 +176,7 @@ export function StudentPracticeAttemptResultPage() {
                       );
                     })}
                   </div>
+                  )}
 
                   {question.explanation ? (
                     <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">

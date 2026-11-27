@@ -194,7 +194,10 @@ export function QuestionEditorForm({
         { id: "true", label: "Đ", text: "Đúng" },
         { id: "false", label: "S", text: "Sai" },
       ]);
-    if (type !== "TRUE_FALSE" && form.options.length < 4)
+    if (type === "TRUE_FALSE_SET")
+      update("options", ["a", "b", "c", "d"].map((id) => ({ id, label: id, text: "" })));
+    if (type === "SHORT_ANSWER") update("options", []);
+    if (type !== "TRUE_FALSE" && type !== "TRUE_FALSE_SET" && type !== "SHORT_ANSWER" && form.options.length < 4)
       update("options", initialOptions);
   }
 
@@ -214,7 +217,7 @@ export function QuestionEditorForm({
         ...current,
         correctOptionIds: selected
           ? current.correctOptionIds.filter((item) => item !== id)
-          : current.type === "MULTIPLE_CHOICE"
+          : current.type === "MULTIPLE_CHOICE" || current.type === "TRUE_FALSE_SET"
             ? [...current.correctOptionIds, id]
             : [id],
       };
@@ -230,14 +233,18 @@ export function QuestionEditorForm({
         ...form,
         topicId: form.topicId || null,
         topicName: form.topicName || "",
-        options: form.type === "ESSAY" ? [] : form.options,
-        correctOptionIds: form.type === "ESSAY" ? [] : form.correctOptionIds,
+        options: form.type === "ESSAY" || form.type === "SHORT_ANSWER" ? [] : form.options,
+        correctOptionIds: form.type === "ESSAY" ? [] : form.type === "SHORT_ANSWER" ? form.correctOptionIds.map((value) => value.trim()).filter(Boolean) : form.correctOptionIds,
       };
       if (!payload.subjectId)
         throw new Error("Vui lòng chọn môn học");
       if (!payload.content.trim())
         throw new Error("Vui lòng nhập nội dung câu hỏi");
-      if (payload.type !== "ESSAY" && payload.correctOptionIds.length === 0)
+      if (payload.type === "SHORT_ANSWER" && payload.correctOptionIds.length === 0)
+        throw new Error("Vui lòng nhập đáp án của câu trả lời ngắn");
+      if (payload.type === "TRUE_FALSE_SET" && payload.options.some((option) => !option.text.trim()))
+        throw new Error("Vui lòng nhập đủ 4 mệnh đề a, b, c, d");
+      if (payload.type !== "ESSAY" && payload.type !== "TRUE_FALSE_SET" && payload.type !== "SHORT_ANSWER" && payload.correctOptionIds.length === 0)
         throw new Error("Vui lòng chọn đáp án đúng");
       let savedQuestion = savedDraftId
         ? await questionBankService.updateQuestion(savedDraftId, payload)
@@ -356,6 +363,8 @@ export function QuestionEditorForm({
                   { value: "SINGLE_CHOICE", label: "Trắc nghiệm một đáp án" },
                   { value: "MULTIPLE_CHOICE", label: "Trắc nghiệm nhiều đáp án" },
                   { value: "TRUE_FALSE", label: "Đúng / Sai" },
+                  { value: "TRUE_FALSE_SET", label: "Đúng / Sai 4 ý (đề THPT)" },
+                  { value: "SHORT_ANSWER", label: "Trả lời ngắn (đề THPT)" },
                   { value: "ESSAY", label: "Tự luận" },
                 ]}
                 onValueChange={(value) => changeType(value as QuestionType)}
@@ -386,7 +395,18 @@ export function QuestionEditorForm({
               />
             </div>
 
-            {form.type !== "ESSAY" ? (
+            {form.type === "SHORT_ANSWER" ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                <Input
+                  label="Đáp án chấp nhận"
+                  required
+                  value={form.correctOptionIds.join("; ")}
+                  onChange={(event) => update("correctOptionIds", event.target.value.split(";").map((part) => part.trimStart()))}
+                  hint="Một số, tối đa 4 ký tự. Có thể nhập nhiều cách viết cách nhau bởi dấu chấm phẩy, ví dụ: 0,25; 1/4. Dấu phẩy và dấu chấm thập phân được coi là như nhau."
+                  placeholder="Ví dụ: -2,5"
+                />
+              </div>
+            ) : form.type !== "ESSAY" ? (
               <div
                 className={`rounded-xl border border-slate-200 bg-slate-50/60 ${embedded ? "p-3" : "p-4"}`}
               >
@@ -398,11 +418,11 @@ export function QuestionEditorForm({
                       Danh sách đáp án
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Chọn nút bên trái để đánh dấu đáp án đúng.
+                      {form.type === "TRUE_FALSE_SET" ? "Bật dấu ✓ ở mệnh đề ĐÚNG; mệnh đề không bật là Sai." : "Chọn nút bên trái để đánh dấu đáp án đúng."}
                     </p>
                   </div>
                   <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
-                    {form.type === "SINGLE_CHOICE" ? "Chọn 1" : "Chọn nhiều"}
+                    {form.type === "SINGLE_CHOICE" ? "Chọn 1" : form.type === "TRUE_FALSE_SET" ? "4 mệnh đề" : "Chọn nhiều"}
                   </span>
                 </div>
                 <div className={embedded ? "space-y-1.5" : "space-y-2"}>

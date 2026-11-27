@@ -1,5 +1,7 @@
 "use client";
 
+import { PracticeThptInput } from "@/components/assessment/practice-thpt-input";
+import { isThptPracticeType, storedPracticeAnswer } from "@/lib/practice-answers";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { examAttemptService } from "@/lib/assessment-api";
@@ -65,6 +67,9 @@ export function StudyPracticeHistory({ practice }: { practice: StudyPracticeSet 
               <article key={question.id} className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs font-bold text-brand-700">Câu {index + 1} · {question.topicName}</p>
                 <p className="mt-1 font-semibold">{question.content}</p>
+                {isThptPracticeType(question.type) ? (
+                  <PracticeThptInput question={question} values={storedPracticeAnswer(question)} locked review onChoose={() => undefined} />
+                ) : (
                 <div className="mt-3 space-y-1 text-sm">
                   {question.options.map((option) => {
                     const chosen = question.selectedOptionIds?.includes(option.id);
@@ -74,6 +79,7 @@ export function StudyPracticeHistory({ practice }: { practice: StudyPracticeSet 
                     </p>;
                   })}
                 </div>
+                )}
                 {question.explanation ? <p className="mt-3 text-sm text-slate-600">Giải thích: {question.explanation}</p> : null}
               </article>
             ))}

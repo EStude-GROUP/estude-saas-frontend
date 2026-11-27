@@ -1,5 +1,7 @@
 "use client";
 
+import { PracticeThptInput } from "@/components/assessment/practice-thpt-input";
+import { isThptPracticeType, storedPracticeAnswer } from "@/lib/practice-answers";
 import { useState } from "react";
 import { BookOpenCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -250,6 +252,9 @@ export function PracticeAttemptHistory({
                 >
                   {q.correct ? "Đúng" : "Chưa đúng"}
                 </p>
+                {isThptPracticeType(q.type) ? (
+                  <PracticeThptInput question={q} values={storedPracticeAnswer(q)} locked review onChoose={() => undefined} />
+                ) : (
                 <ul className="mt-2 space-y-1 text-sm">
                   {q.options.map((o) => (
                     <li
@@ -268,6 +273,7 @@ export function PracticeAttemptHistory({
                     </li>
                   ))}
                 </ul>
+                )}
                 {q.explanation ? (
                   <p className="mt-2 text-sm text-slate-500">{q.explanation}</p>
                 ) : null}

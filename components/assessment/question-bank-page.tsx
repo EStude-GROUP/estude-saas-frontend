@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   Sparkles,
+  ClipboardList,
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -451,6 +452,12 @@ export function QuestionBankPage() {
                   </Button>
                 </>
               ) : null}
+              {FEATURES.aiQuestions ? <Link href="/teacher/question-bank/exam-set">
+                <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
+                  <ClipboardList className="size-4" />
+                  Tạo bộ đề AI
+                </Button>
+              </Link> : null}
               {FEATURES.aiQuestions ? <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
                 <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <Sparkles className="size-4" />

@@ -93,6 +93,8 @@ function taskTone(task: LearningTask) {
 function questionTypeText(type: StudyPracticeQuestion["type"]) {
   if (type === "MULTIPLE_CHOICE") return "Nhiều đáp án";
   if (type === "TRUE_FALSE") return "Đúng / Sai";
+  if (type === "TRUE_FALSE_SET") return "Đúng / Sai 4 ý";
+  if (type === "SHORT_ANSWER") return "Trả lời ngắn";
   if (type === "ESSAY") return "Tự luận";
   return "Một đáp án";
 }
