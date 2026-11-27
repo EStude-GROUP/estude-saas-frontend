@@ -4,6 +4,7 @@ import type {
   AiQuestionDraftInput,
   ApprovedAiQuestion,
   QuestionFolder,
+  QuestionTrash,
 } from "@/types/assessment";
 import type {
   BaselineSelection,
@@ -648,10 +649,25 @@ export const questionBankService = {
       { method: "PATCH", body: JSON.stringify({ name }) },
     );
   },
-  deleteFolder(id: string): Promise<Record<string, never>> {
-    return authenticatedRequest<Record<string, never>>(
+  deleteFolder(id: string): Promise<{ folders: number; questions: number }> {
+    return authenticatedRequest<{ folders: number; questions: number }>(
       `/question-bank/folders/${encodeURIComponent(id)}`,
       { method: "DELETE" },
+    );
+  },
+  trash(): Promise<QuestionTrash> {
+    return authenticatedRequest<QuestionTrash>("/question-bank/trash");
+  },
+  restoreTrashFolder(id: string): Promise<QuestionFolder> {
+    return authenticatedRequest<QuestionFolder>(
+      `/question-bank/trash/folders/${encodeURIComponent(id)}/restore`,
+      { method: "POST" },
+    );
+  },
+  restoreTrashQuestion(id: string): Promise<Question> {
+    return authenticatedRequest<Question>(
+      `/question-bank/trash/questions/${encodeURIComponent(id)}/restore`,
+      { method: "POST" },
     );
   },
   moveQuestionsToFolder(payload: {
