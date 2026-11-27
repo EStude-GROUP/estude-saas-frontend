@@ -477,6 +477,7 @@ function getWorkspaceTitle(pathname: string, links: WorkspaceLink[]): string {
   if (pathname === "/teacher/question-bank/generate")
     return "Tạo câu hỏi bằng AI";
   if (pathname === "/teacher/question-bank/exam-set") return "Tạo bộ đề AI";
+  if (pathname === "/teacher/question-bank/trash") return "Thùng rác";
   if (pathname === "/teacher/question-bank/print") return "In đề";
   if (pathname === "/teacher/question-bank/new") return "Tạo câu hỏi mới";
   if (/^\/teacher\/question-bank\/[^/]+\/edit$/.test(pathname))
@@ -592,7 +593,9 @@ function getWorkspaceBreadcrumbs(
   const currentLabel =
     pathname === "/teacher/question-bank/generate"
       ? "Tạo câu hỏi bằng AI"
-      : pathname === "/teacher/question-bank/exam-set"
+      : pathname === "/teacher/question-bank/trash"
+        ? "Thùng rác"
+        : pathname === "/teacher/question-bank/exam-set"
         ? "Tạo bộ đề AI"
         : pathname === "/teacher/question-bank/print"
           ? "In đề"

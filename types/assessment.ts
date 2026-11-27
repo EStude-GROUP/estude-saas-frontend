@@ -39,6 +39,31 @@ export interface Question {
   updatedAt: string;
 }
 
+export interface QuestionTrashFolder {
+  id: string;
+  name: string;
+  deletedAt: string;
+  purgeAt: string;
+  subfolders: number;
+  questions: number;
+}
+
+export interface QuestionTrashItem {
+  id: string;
+  content: string;
+  type: QuestionType;
+  difficulty: Difficulty;
+  subjectName: string;
+  deletedAt: string;
+  purgeAt: string;
+}
+
+export interface QuestionTrash {
+  retentionDays: number;
+  folders: QuestionTrashFolder[];
+  questions: QuestionTrashItem[];
+}
+
 export interface QuestionFolder {
   id: string;
   parentId: string | null;

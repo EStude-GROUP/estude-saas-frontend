@@ -7,6 +7,7 @@ import { answerModeLabels, answerModeOf, suggestedAnswerMode } from "@/lib/exam-
 import { takeExamSetDraft } from "@/lib/exam-print-draft";
 
 import Link from "@/components/ui/portal-link";
+import { FEATURES } from "@/lib/features";
 import {courseOfferingApi,type CourseOffering} from "@/lib/course-offering-api";
 import {currentCourseId,courseWorkspaceHref} from "@/lib/course-workspace";
 import {
@@ -19,6 +20,7 @@ import {
   CalendarClock,
   Check,
   ChevronRight,
+  ClipboardList,
   Clock3,
   Edit3,
   Eye,
@@ -388,6 +390,11 @@ export function TeacherExamsPage() {
  ]}
 
  actions={<div className="flex shrink-0 flex-nowrap justify-end gap-2">
+              {FEATURES.aiQuestions ? <Link href="/teacher/question-bank/exam-set">
+                <Button permission="ai_questions.create" variant="secondary" title="AI soạn cả đề theo cấu trúc THPT từ tài liệu, rồi tạo bài kiểm tra hoặc in" className="!h-[42px] !rounded-lg whitespace-nowrap">
+                  <ClipboardList className="size-4" /> Tạo đề bằng AI
+                </Button>
+              </Link> : null}
               <Button permission="exams.create"
                 className="!h-[42px] !rounded-lg"
                 onClick={() => router.push(courseWorkspaceHref("/teacher/exams/new"))}

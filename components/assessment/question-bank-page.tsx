@@ -180,7 +180,7 @@ export function QuestionBankPage() {
   async function remove(question: Question) {
     if (
       !window.confirm(
-        `Xóa câu hỏi “${question.content.slice(0, 45)}...” khỏi ngân hàng?`,
+        `Chuyển câu hỏi “${question.content.slice(0, 45)}...” vào thùng rác?\n\nBạn có thể khôi phục trong 15 ngày, sau đó câu hỏi bị xóa vĩnh viễn.`,
       )
     )
       return;
@@ -246,11 +246,19 @@ export function QuestionBankPage() {
   }
 
   async function deleteFolder(folder: QuestionFolder) {
-    if (!window.confirm(`Xóa thư mục trống “${folder.name}”?`)) return;
+    const doomed = folderDescendantIds(folders, folder.id);
+    const questionTotal = [...doomed].reduce((sum, id) => sum + (folderCounts[id] ?? 0), 0);
+    const subfolderTotal = doomed.size - 1;
+    const contents = [questionTotal ? `${questionTotal} câu hỏi` : "", subfolderTotal ? `${subfolderTotal} thư mục con` : ""].filter(Boolean).join(" và ");
+    const warning = contents
+      ? `⚠ Thư mục “${folder.name}” đang chứa ${contents}.\nTất cả sẽ được chuyển vào thùng rác. Nếu không khôi phục trong 15 ngày, dữ liệu sẽ bị xóa vĩnh viễn.\n\nTiếp tục xóa?`
+      : `Chuyển thư mục trống “${folder.name}” vào thùng rác? Bạn có thể khôi phục trong 15 ngày.`;
+    if (!window.confirm(warning)) return;
     try {
       await questionBankService.deleteFolder(folder.id);
-      setFolders((items) => items.filter((item) => item.id !== folder.id));
-      if (selectedFolder === folder.id) selectFolder("all");
+      setFolders((items) => items.filter((item) => !doomed.has(item.id)));
+      setQuestions((items) => items.filter((item) => !doomed.has(item.folderId ?? "")));
+      if (doomed.has(selectedFolder)) selectFolder("all");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không thể xóa thư mục");
     }
@@ -452,16 +460,22 @@ export function QuestionBankPage() {
                   </Button>
                 </>
               ) : null}
+              <Link href="/teacher/question-bank/trash">
+                <Button permission="questions.read" variant="secondary" title="Câu hỏi và thư mục đã xóa, khôi phục được trong 15 ngày" className="!h-[42px] !rounded-lg whitespace-nowrap">
+                  <Trash2 className="size-4" />
+                  Thùng rác
+                </Button>
+              </Link>
               {FEATURES.aiQuestions ? <Link href="/teacher/question-bank/exam-set">
-                <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
+                <Button permission="ai_questions.create" variant="secondary" title="Soạn cả một đề theo cấu trúc đề thi THPT, nhiều phần, có thể in" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <ClipboardList className="size-4" />
                   Tạo bộ đề AI
                 </Button>
               </Link> : null}
               {FEATURES.aiQuestions ? <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/generate" : `/teacher/question-bank/generate?folderId=${encodeURIComponent(selectedFolder)}`}>
-                <Button permission="ai_questions.create" variant="secondary" className="!h-[42px] !rounded-lg whitespace-nowrap">
+                <Button permission="ai_questions.create" variant="secondary" title="Sinh một loại câu hỏi từ tài liệu, mỗi lần một loại" className="!h-[42px] !rounded-lg whitespace-nowrap">
                   <Sparkles className="size-4" />
-                  Tạo bằng AI
+                  Tạo câu hỏi bằng AI
                 </Button>
               </Link> : null}
               <Link href={selectedFolder === "all" || selectedFolder === "unfiled" ? "/teacher/question-bank/new" : `/teacher/question-bank/new?folderId=${encodeURIComponent(selectedFolder)}`}>
